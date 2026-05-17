@@ -1,13 +1,13 @@
 /**
- * Architect Engine — WELL v2 Adaptive Space Planning
+ * Architect Engine — comfort Adaptive Space Planning
  * ===================================================
  * Three tools for the architect:
  * 1. DIAGNOSIS   — gap between each employee's preferences and their seat environment
  * 2. GENERATION  — design recommendations card based on all employees
- * 3. COMPARISON  — before/after wellness scores when design changes
+ * 3. COMPARISON  — before/after comfort scores when design changes
  */
 
-import { UserProfile, calculateWellnessMatch, WellnessMatch } from './userProfileEngine';
+import { UserProfile, calculateComfortMatch, ComfortMatch } from './userProfileEngine';
 import { Seat, FloorPlan, SeatEnvironment, calculateSeatEnvironment, Window } from './floorPlanEngine';
 
 // ─── DIAGNOSIS ───────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ export interface EmployeeDiagnosis {
   seatId: string;
   seatLabel: string;
   environment: SeatEnvironment;
-  wellnessMatch: WellnessMatch;
+  comfortMatch: ComfortMatch;
   gaps: Gap[];
   interventions: Intervention[];
 }
@@ -40,17 +40,17 @@ export interface Intervention {
   type: 'relocate' | 'glazing' | 'partition' | 'lighting' | 'ventilation' | 'shading';
   titleAr: string;
   descriptionAr: string;
-  wellCriteria: string;
-  expectedImprovement: number; // % wellness score improvement
+  criteria: string;
+  expectedImprovement: number; // % comfort score improvement
   priority: 'critical' | 'high' | 'medium';
 }
 
 const GAP_LABELS: Record<string, string> = {
-  temperature: 'درجة الحرارة',
-  illuminance: 'مستوى الإضاءة',
-  noise: 'مستوى الضوضاء',
-  co2: 'جودة الهواء (CO₂)',
-  humidity: 'الرطوبة',
+  temperature: 'Temperature',
+  illuminance: 'Illuminance',
+  noise: 'Noise level',
+  co2: 'Air quality (CO2)',
+  humidity: 'Humidity',
 };
 
 const GAP_UNITS: Record<string, string> = {
@@ -84,7 +84,7 @@ export function diagnoseEmployee(
     humidity: env.estimatedHumidity,
   };
 
-  const wellnessMatch = calculateWellnessMatch(profile, sensorData);
+  const comfortMatch = calculateComfortMatch(profile, sensorData);
 
   // Build gaps
   const gaps: Gap[] = [];
@@ -150,18 +150,18 @@ export function diagnoseEmployee(
         interventions.push({
           id: `int-glaze-${seat.id}`,
           type: 'glazing',
-          titleAr: 'استبدال الزجاج بـ Low-E مزدوج',
-          descriptionAr: `الواجهة ${env.nearestExteriorOrientation === 'south' ? 'الجنوبية' : 'الغربية'} تسبب كسباً حرارياً مرتفعاً. زجاج Low-E يُخفّض الكسب الحراري بنسبة 55%.`,
-          wellCriteria: 'WELL v2 — Thermal Comfort T01',
+          titleAr: 'Upgrade hot-facade glazing to Low-E',
+          descriptionAr: `The ${env.nearestExteriorOrientation === 'south' ? 'south' : 'west'} facade is creating high solar heat gain. Low-E glazing can reduce heat gain by roughly 55%.`,
+          criteria: 'Thermal comfort',
           expectedImprovement: 18,
           priority: gap.severity === 'critical' ? 'critical' : 'high',
         });
         interventions.push({
           id: `int-shade-${seat.id}`,
           type: 'shading',
-          titleAr: 'إضافة نظام تظليل خارجي أو ستائر ذكية',
-          descriptionAr: 'التظليل الخارجي يُقلّل الكسب الحراري قبل دخوله المبنى بكفاءة أعلى من الستائر الداخلية.',
-          wellCriteria: 'WELL v2 — Thermal Comfort T02',
+          titleAr: 'Add exterior shading',
+          descriptionAr: 'Exterior shading blocks solar gain before it enters the workspace and is more effective than interior blinds alone.',
+          criteria: 'Thermal comfort',
           expectedImprovement: 12,
           priority: 'high',
         });
@@ -169,9 +169,9 @@ export function diagnoseEmployee(
         interventions.push({
           id: `int-relocate-${seat.id}`,
           type: 'relocate',
-          titleAr: `نقل مقعد ${profile.name} بعيداً عن الواجهة`,
-          descriptionAr: `المقعد على بُعد ${env.distanceToExteriorWall}م من الجدار الخارجي. النقل إلى عمق أكبر يُخفّض درجة الحرارة المحيطة.`,
-          wellCriteria: 'WELL v2 — Thermal Comfort T01',
+          titleAr: `Move ${profile.name} away from the hot facade`,
+          descriptionAr: `The seat is ${env.distanceToExteriorWall}m from the exterior wall. Moving deeper into the plan should reduce heat exposure.`,
+          criteria: 'Thermal comfort',
           expectedImprovement: 15,
           priority: gap.severity === 'critical' ? 'critical' : 'medium',
         });
@@ -182,9 +182,9 @@ export function diagnoseEmployee(
       interventions.push({
         id: `int-light-${seat.id}`,
         type: 'lighting',
-        titleAr: 'إضافة إضاءة مهمة قابلة للتعتيم',
-        descriptionAr: `مستوى الإضاءة الحالي ${env.estimatedIlluminance} lux أقل من المفضّل ${p.illuminancePreferred} lux. LED قابل للتعتيم 200–750 lux.`,
-        wellCriteria: 'WELL v2 — Light L01',
+        titleAr: 'Add dimmable task lighting',
+        descriptionAr: `Current illuminance is ${env.estimatedIlluminance} lux, below the preferred ${p.illuminancePreferred} lux. Add dimmable LED task lighting in the 200-750 lux range.`,
+        criteria: 'Lighting comfort',
         expectedImprovement: 14,
         priority: 'medium',
       });
@@ -194,9 +194,9 @@ export function diagnoseEmployee(
       interventions.push({
         id: `int-glare-${seat.id}`,
         type: 'shading',
-        titleAr: 'إضافة لوح تظليل لتقليل الوهج',
-        descriptionAr: `الإضاءة ${env.estimatedIlluminance} lux أعلى من المفضّل. ستارة شفافة أو لوح انعكاسي يُخفّض الوهج.`,
-        wellCriteria: 'WELL v2 — Light L02 (Glare Control)',
+        titleAr: 'Reduce glare with shading',
+        descriptionAr: `Current illuminance is ${env.estimatedIlluminance} lux, above the preferred range. Add a shade or redirecting panel to soften glare.`,
+        criteria: 'Glare control',
         expectedImprovement: 10,
         priority: 'medium',
       });
@@ -206,9 +206,9 @@ export function diagnoseEmployee(
       interventions.push({
         id: `int-partition-${seat.id}`,
         type: 'partition',
-        titleAr: 'إضافة حاجز صوتي ممتص',
-        descriptionAr: `مستوى الضوضاء ${env.estimatedNoise} dB يتجاوز المقبول ${p.noisePreferred} dB. لوح Rockwool 50mm يُخفّض الضوضاء 8–12 dB.`,
-        wellCriteria: 'WELL v2 — Sound S01',
+        titleAr: 'Add acoustic absorption',
+        descriptionAr: `Noise level is ${env.estimatedNoise} dB, above the preferred ${p.noisePreferred} dB. A 50mm acoustic panel can reduce noise by 8-12 dB.`,
+        criteria: 'Acoustic comfort',
         expectedImprovement: 16,
         priority: gap.severity === 'critical' ? 'critical' : 'high',
       });
@@ -218,9 +218,9 @@ export function diagnoseEmployee(
       interventions.push({
         id: `int-vent-${seat.id}`,
         type: 'ventilation',
-        titleAr: 'إضافة فتحة تهوية مباشرة',
-        descriptionAr: `CO₂ ${env.estimatedCO2} ppm يتجاوز حد WELL (1000 ppm). فتحة تهوية قريبة تُخفّض التركيز بشكل فعّال.`,
-        wellCriteria: 'WELL v2 — Air A01',
+        titleAr: 'Increase local ventilation',
+        descriptionAr: `CO2 is ${env.estimatedCO2} ppm, above the target threshold. Add a nearby supply path or increase fresh-air exchange.`,
+        criteria: 'Air quality',
         expectedImprovement: 20,
         priority: 'critical',
       });
@@ -240,7 +240,7 @@ export function diagnoseEmployee(
     seatId: seat.id,
     seatLabel: seat.label,
     environment: env,
-    wellnessMatch,
+    comfortMatch,
     gaps,
     interventions: uniqueInterventions,
   };
@@ -253,7 +253,7 @@ export interface DesignCard {
   recommendations: DesignRecommendation[];
   affectedEmployees: number;
   totalEmployees: number;
-  expectedWellnessGain: number;
+  expectedComfortGain: number;
 }
 
 export interface DesignRecommendation {
@@ -261,7 +261,7 @@ export interface DesignRecommendation {
   category: 'glazing' | 'partition' | 'lighting' | 'ventilation' | 'shading' | 'layout';
   titleAr: string;
   descriptionAr: string;
-  wellCriteria: string;
+  criteria: string;
   affectedCount: number;
   priority: 'critical' | 'high' | 'medium';
   technicalSpec: string;
@@ -270,7 +270,7 @@ export interface DesignRecommendation {
 export function generateDesignCard(diagnoses: EmployeeDiagnosis[]): DesignCard {
   const total = diagnoses.length;
   if (total === 0) {
-    return { zone: 'المكتب', recommendations: [], affectedEmployees: 0, totalEmployees: 0, expectedWellnessGain: 0 };
+    return { zone: '', recommendations: [], affectedEmployees: 0, totalEmployees: 0, expectedComfortGain: 0 };
   }
 
   // Aggregate gaps across all employees
@@ -297,23 +297,23 @@ export function generateDesignCard(diagnoses: EmployeeDiagnosis[]): DesignCard {
       recommendations.push({
         id: 'rec-glazing',
         category: 'glazing',
-        titleAr: 'استبدال الزجاج بـ Low-E مزدوج على الواجهات الجنوبية والغربية',
-        descriptionAr: `${thermalCount} من ${total} موظف يعانون من حرارة مرتفعة. زجاج Low-E (U-value ≤ 1.4 W/m²K) يُخفّض الكسب الحراري 55%.`,
-        wellCriteria: 'WELL v2 — Thermal Comfort T01 & T02',
+        titleAr: 'Upgrade south and west glazing to Low-E',
+        descriptionAr: `${thermalCount} of ${total} employees are exposed to high heat. Low-E glazing with U-value <= 1.4 W/m2K can reduce solar heat gain by roughly 55%.`,
+        criteria: 'Thermal comfort',
         affectedCount: thermalCount,
         priority: thermalCount >= Math.ceil(total * 0.5) ? 'critical' : 'high',
-        technicalSpec: 'زجاج Low-E مزدوج، U-value ≤ 1.4 W/m²K، SHGC ≤ 0.25',
+        technicalSpec: 'Low-E double glazing, U-value <= 1.4 W/m2K, SHGC <= 0.25',
       });
     } else {
       recommendations.push({
         id: 'rec-relocate',
         category: 'layout',
-        titleAr: 'إعادة توزيع المقاعد بعيداً عن الواجهات الحارة',
-        descriptionAr: `نقل ${thermalCount} موظف إلى عمق أكبر من الجدار الخارجي يُقلّل الكسب الحراري دون تكلفة إنشائية.`,
-        wellCriteria: 'WELL v2 — Thermal Comfort T01',
+        titleAr: 'Redistribute seats away from hot facades',
+        descriptionAr: `Move ${thermalCount} employees farther from exterior walls to reduce heat exposure without construction work.`,
+        criteria: 'Thermal comfort',
         affectedCount: thermalCount,
         priority: 'medium',
-        technicalSpec: 'مسافة لا تقل عن 2م من الجدار الخارجي للواجهات الجنوبية والغربية',
+        technicalSpec: 'Keep heat-sensitive desks at least 2m from south and west exterior walls',
       });
     }
   }
@@ -324,12 +324,12 @@ export function generateDesignCard(diagnoses: EmployeeDiagnosis[]): DesignCard {
     recommendations.push({
       id: 'rec-partition',
       category: 'partition',
-      titleAr: 'تركيب حواجز صوتية ممتصة',
-      descriptionAr: `${noiseCount} موظف يعانون من ضوضاء تتجاوز مستوى راحتهم. لوح Rockwool 50mm بين المقاعد يُخفّض الضوضاء 8–12 dB.`,
-      wellCriteria: 'WELL v2 — Sound S01 (Maximum Noise Levels)',
+      titleAr: 'Install acoustic partitions',
+      descriptionAr: `${noiseCount} employees are above their preferred noise range. 50mm acoustic panels can reduce noise by 8-12 dB.`,
+      criteria: 'Acoustic comfort',
       affectedCount: noiseCount,
       priority: noiseCount >= Math.ceil(total * 0.5) ? 'high' : 'medium',
-      technicalSpec: 'لوح صوتي Rockwool 50mm، ارتفاع 1.4م، معامل امتصاص NRC ≥ 0.75',
+      technicalSpec: '50mm acoustic panel, 1.4m height, NRC >= 0.75',
     });
   }
 
@@ -342,23 +342,23 @@ export function generateDesignCard(diagnoses: EmployeeDiagnosis[]): DesignCard {
       recommendations.push({
         id: 'rec-lighting',
         category: 'lighting',
-        titleAr: 'تركيب إضاءة LED قابلة للتعتيم',
-        descriptionAr: `${tooLow} موظف يحتاجون إضاءة أعلى. نظام LED قابل للتعتيم 200–750 lux يُلبّي تفضيلات متباينة.`,
-        wellCriteria: 'WELL v2 — Light L01 (Light Exposure and Education)',
+        titleAr: 'Install dimmable LED task lighting',
+        descriptionAr: `${tooLow} employees need higher light levels. Dimmable LED lighting in the 200-750 lux range supports varied preferences.`,
+        criteria: 'Lighting comfort',
         affectedCount: lightCount,
         priority: 'medium',
-        technicalSpec: 'LED قابل للتعتيم 0–100%، نطاق 200–750 lux، درجة لون 3000–5000K',
+        technicalSpec: '0-100% dimmable LED, 200-750 lux, 3000-5000K color temperature',
       });
     } else {
       recommendations.push({
         id: 'rec-glare',
         category: 'shading',
-        titleAr: 'إضافة ستائر شفافة أو ألواح انعكاسية للتحكم بالوهج',
-        descriptionAr: `${tooHigh} موظف يعانون من إضاءة مرتفعة. ستارة شفافة أو لوح انعكاسي يُخفّض الوهج مع الحفاظ على الضوء الطبيعي.`,
-        wellCriteria: 'WELL v2 — Light L02 (Glare Control)',
+        titleAr: 'Add glare-control shades',
+        descriptionAr: `${tooHigh} employees are exposed to excessive light. Use translucent shades or redirecting panels to soften glare while keeping daylight.`,
+        criteria: 'Glare control',
         affectedCount: lightCount,
         priority: 'medium',
-        technicalSpec: 'ستائر شفافة بعامل انتقال ضوئي 30–50%، أو لوح انعكاسي أفقي',
+        technicalSpec: 'Translucent shades with 30-50% visible light transmission',
       });
     }
   }
@@ -369,12 +369,12 @@ export function generateDesignCard(diagnoses: EmployeeDiagnosis[]): DesignCard {
     recommendations.push({
       id: 'rec-ventilation',
       category: 'ventilation',
-      titleAr: 'زيادة معدل تبادل الهواء وإضافة فتحات تهوية',
-      descriptionAr: `${co2Count} موظف في مناطق CO₂ مرتفع (>1000 ppm). معدل تبادل هواء 10 L/s/شخص يُعيد التركيز للمستوى الآمن.`,
-      wellCriteria: 'WELL v2 — Air A01 (Ventilation Design)',
+      titleAr: 'Increase air exchange',
+      descriptionAr: `${co2Count} employees are in high CO2 zones above 1000 ppm. Increase fresh-air delivery near occupied areas.`,
+      criteria: 'Air quality',
       affectedCount: co2Count,
       priority: 'critical',
-      technicalSpec: 'معدل تبادل هواء ≥ 10 L/s/شخص، فتحات تهوية قريبة من مناطق الإشغال العالي',
+      technicalSpec: 'Fresh-air delivery >= 10 L/s/person near high-occupancy zones',
     });
   }
 
@@ -382,11 +382,11 @@ export function generateDesignCard(diagnoses: EmployeeDiagnosis[]): DesignCard {
   const avgGain = recommendations.reduce((s, r) => s + r.affectedCount * 15, 0) / Math.max(1, total);
 
   return {
-    zone: 'المكتب الكامل',
+    zone: ' ',
     recommendations,
     affectedEmployees,
     totalEmployees: total,
-    expectedWellnessGain: Math.round(Math.min(35, avgGain)),
+    expectedComfortGain: Math.round(Math.min(35, avgGain)),
   };
 }
 
@@ -452,8 +452,8 @@ export function compareScenarios(
       humidity: envAfter.estimatedHumidity,
     };
 
-    const matchBefore = calculateWellnessMatch(profile, sensorBefore);
-    const matchAfter = calculateWellnessMatch(profile, sensorAfter);
+    const matchBefore = calculateComfortMatch(profile, sensorBefore);
+    const matchAfter = calculateComfortMatch(profile, sensorAfter);
 
     const diagBefore = diagnoseEmployee(profile, seat, envBefore);
     const diagAfter = diagnoseEmployee(profile, seat, envAfter);

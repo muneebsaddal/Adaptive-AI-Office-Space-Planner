@@ -1,16 +1,16 @@
 /**
  * FloorPlanEditor — Interactive floor plan canvas
- * Design: Scandinavian Wellness Dashboard
+ * Design: Scandinavian Comfort Dashboard
  * Allows drawing walls, windows, placing seats, assigning employees
  */
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { nanoid } from 'nanoid';
-import { FloorPlan, Wall, Window, Seat, Orientation, createDefaultFloorPlan, calculateSeatEnvironment, checkWellCompliance } from '@/lib/floorPlanEngine';
+import { FloorPlan, Wall, Window, Seat, Orientation, createDefaultFloorPlan, calculateSeatEnvironment, checkComfortCompliance } from '@/lib/floorPlanEngine';
 import { UserProfile } from '@/lib/userProfileEngine';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useArchitect } from '@/contexts/ArchitectContext';
 
 type Tool = 'select' | 'wall' | 'window' | 'seat' | 'pan';
 
@@ -30,10 +30,10 @@ const ORIENTATION_COLORS: Record<Orientation, string> = {
 };
 
 const ORIENTATION_LABELS: Record<Orientation, string> = {
-  north: 'ش', south: 'ج', east: 'ش.ق', west: 'غ',
+  north: '', south: '', east: '.', west: '',
 };
 
-const WELL_SCORE_COLOR = (score: number) => {
+const comfort_SCORE_COLOR = (score: number) => {
   if (score >= 80) return '#22c55e';
   if (score >= 60) return '#f59e0b';
   return '#ef4444';
@@ -42,7 +42,7 @@ const WELL_SCORE_COLOR = (score: number) => {
 export default function FloorPlanEditor({
   plan, onPlanChange, profiles, selectedSeatId, onSeatSelect
 }: FloorPlanEditorProps) {
-  const { isArabic } = useLanguage();
+  const { city, simulationDate } = useArchitect();
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeTool, setActiveTool] = useState<Tool>('select');
   const [drawing, setDrawing] = useState(false);
@@ -132,7 +132,7 @@ export default function FloorPlanEditor({
         userId: null,
         x: snapped.x,
         y: snapped.y,
-        label: `مقعد ${plan.seats.length + 1}`,
+        label: `Seat ${plan.seats.length + 1}`,
       };
       onPlanChange({ ...plan, seats: [...plan.seats, newSeat] });
       return;
@@ -256,13 +256,13 @@ export default function FloorPlanEditor({
     onSeatSelect(null);
   };
 
-  // Compute wellness scores for seats
+  // Compute comfort scores for seats
   const seatScores: Record<string, number> = {};
   plan.seats.forEach(seat => {
     const profile = profiles.find(p => p.id === seat.userId);
     if (profile) {
-      const env = calculateSeatEnvironment(seat, plan, plan.city);
-      const compliance = checkWellCompliance(env);
+      const env = calculateSeatEnvironment(seat, plan, city, simulationDate);
+      const compliance = checkComfortCompliance(env);
       seatScores[seat.id] = compliance.score;
     }
   });
@@ -385,7 +385,7 @@ export default function FloorPlanEditor({
     <div className="flex flex-col gap-3">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 p-3 bg-card border border-border rounded-lg">
-        <span className="text-xs font-medium text-muted-foreground ml-1">{isArabic ? 'الأداة:' : 'Tool:'}</span>
+        <span className="text-xs font-medium text-muted-foreground ml-1">Tool:</span>
         {(['select', 'pan', 'wall', 'window', 'seat'] as Tool[]).map(tool => (
           <Button
             key={tool}
@@ -394,11 +394,11 @@ export default function FloorPlanEditor({
             onClick={() => setActiveTool(tool)}
             className="text-xs h-7"
           >
-            {tool === 'select' && (isArabic ? '↖ تحديد' : '↖ Select')}
-            {tool === 'pan' && (isArabic ? '✋ تحريك' : '✋ Pan')}
-            {tool === 'wall' && (isArabic ? '▬ جدار' : '▬ Wall')}
-            {tool === 'window' && (isArabic ? '⬜ نافذة' : '⬜ Window')}
-            {tool === 'seat' && (isArabic ? '🪑 مقعد' : '🪑 Seat')}
+            {tool === 'select' && '↖ Select'}
+            {tool === 'pan' && '✋ Pan'}
+            {tool === 'wall' && '▬ Wall'}
+            {tool === 'window' && '⬜ Window'}
+            {tool === 'seat' && '🪑 Seat'}
           </Button>
         ))}
 
@@ -407,13 +407,13 @@ export default function FloorPlanEditor({
             <div className="w-px h-5 bg-border mx-1" />
             <Select value={newWallOrientation} onValueChange={v => setNewWallOrientation(v as Orientation)}>
               <SelectTrigger className="h-7 w-28 text-xs">
-                <SelectValue placeholder="الاتجاه" />
+                <SelectValue placeholder="Orientation" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="north">{isArabic ? 'شمال' : 'North'}</SelectItem>
-                <SelectItem value="south">{isArabic ? 'جنوب' : 'South'}</SelectItem>
-                <SelectItem value="east">{isArabic ? 'شرق' : 'East'}</SelectItem>
-                <SelectItem value="west">{isArabic ? 'غرب' : 'West'}</SelectItem>
+                <SelectItem value="north">North</SelectItem>
+                <SelectItem value="south">South</SelectItem>
+                <SelectItem value="east">East</SelectItem>
+                <SelectItem value="west">West</SelectItem>
               </SelectContent>
             </Select>
           </>
@@ -425,27 +425,27 @@ export default function FloorPlanEditor({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="exterior">{isArabic ? 'خارجي' : 'Exterior'}</SelectItem>
-              <SelectItem value="interior">{isArabic ? 'داخلي' : 'Interior'}</SelectItem>
+              <SelectItem value="exterior">Exterior</SelectItem>
+              <SelectItem value="interior">Interior</SelectItem>
             </SelectContent>
           </Select>
         )}
 
         <div className="flex-1" />
         <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => zoomBy(1.25)}>
-          {isArabic ? '＋ تكبير' : '＋ Zoom In'}
+          ＋ Zoom In
         </Button>
         <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => zoomBy(0.8)}>
-          {isArabic ? '－ تصغير' : '－ Zoom Out'}
+          － Zoom Out
         </Button>
         <Button size="sm" variant="outline" className="text-xs h-7" onClick={fitToContent}>
-          {isArabic ? 'ملاءمة' : 'Fit'}
+          Fit
         </Button>
         <Button size="sm" variant="outline" className="text-xs h-7" onClick={resetView}>
-          {isArabic ? 'إعادة العرض' : 'Reset View'}
+          Reset View
         </Button>
         <Button size="sm" variant="outline" onClick={resetToDefault} className="text-xs h-7">
-          {isArabic ? '↺ مخطط نموذجي' : '↺ Sample Plan'}
+          ↺ Sample Plan
         </Button>
       </div>
 
@@ -473,14 +473,12 @@ export default function FloorPlanEditor({
         {(['north', 'south', 'east', 'west'] as Orientation[]).map(o => (
           <span key={o} className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 rounded-sm" style={{ background: ORIENTATION_COLORS[o] }} />
-            {isArabic
-              ? (o === 'north' ? 'شمال' : o === 'south' ? 'جنوب' : o === 'east' ? 'شرق' : 'غرب')
-              : (o === 'north' ? 'North' : o === 'south' ? 'South' : o === 'east' ? 'East' : 'West')}
+            {o === 'north' ? 'North' : o === 'south' ? 'South' : o === 'east' ? 'East' : 'West'}
           </span>
         ))}
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-green-500" /> {isArabic ? 'رفاهية عالية' : 'High wellness'}</span>
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-yellow-500" /> {isArabic ? 'متوسطة' : 'Medium'}</span>
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-red-500" /> {isArabic ? 'منخفضة' : 'Low'}</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-green-500" /> High comfort</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-yellow-500" /> Medium</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded-full bg-red-500" /> Low</span>
       </div>
 
       {/* Canvas */}
@@ -512,16 +510,16 @@ export default function FloorPlanEditor({
             <line x1="0" y1="0" x2={plan.scale} y2="0" stroke="#666" strokeWidth="2" />
             <line x1="0" y1="-4" x2="0" y2="4" stroke="#666" strokeWidth="2" />
             <line x1={plan.scale} y1="-4" x2={plan.scale} y2="4" stroke="#666" strokeWidth="2" />
-            <text x={plan.scale / 2} y="-6" textAnchor="middle" fontSize="10" fill="#666">1م</text>
+            <text x={plan.scale / 2} y="-6" textAnchor="middle" fontSize="10" fill="#666">1m</text>
           </g>
 
           {/* Compass */}
           <g transform="translate(30, 30)">
             <circle r="18" fill="white" fillOpacity="0.9" stroke="#ddd" strokeWidth="1" />
-            <text x="0" y="-6" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.north} fontWeight="bold">ش</text>
-            <text x="0" y="14" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.south}>ج</text>
-            <text x="12" y="4" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.east}>ق</text>
-            <text x="-12" y="4" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.west}>غ</text>
+            <text x="0" y="-6" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.north} fontWeight="bold"></text>
+            <text x="0" y="14" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.south}></text>
+            <text x="12" y="4" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.east}></text>
+            <text x="-12" y="4" textAnchor="middle" fontSize="9" fill={ORIENTATION_COLORS.west}></text>
             <polygon points="0,-12 -4,0 0,-4 4,0" fill={ORIENTATION_COLORS.north} />
           </g>
 
@@ -632,7 +630,7 @@ export default function FloorPlanEditor({
                 rx="2"
               />
               <text x={win.x} y={win.y + 4} textAnchor="middle" fontSize="9" fill="white" fontWeight="bold">
-                {isArabic ? 'نافذة' : 'Window'}
+                Window
               </text>
             </g>
           ))}
@@ -671,7 +669,7 @@ export default function FloorPlanEditor({
                 {/* Seat circle */}
                 <circle
                   r="16"
-                  fill={profile ? WELL_SCORE_COLOR(score ?? 50) : '#e5e7eb'}
+                  fill={profile ? comfort_SCORE_COLOR(score ?? 50) : '#e5e7eb'}
                   fillOpacity={profile ? 0.9 : 0.5}
                   stroke={isSelected ? '#6366f1' : '#fff'}
                   strokeWidth={isSelected ? 2.5 : 1.5}
@@ -685,7 +683,7 @@ export default function FloorPlanEditor({
                 {/* Score badge */}
                 {profile && score !== undefined && (
                   <g transform="translate(10, -10)">
-                    <circle r="8" fill={WELL_SCORE_COLOR(score)} stroke="white" strokeWidth="1.5" />
+                    <circle r="8" fill={comfort_SCORE_COLOR(score)} stroke="white" strokeWidth="1.5" />
                     <text textAnchor="middle" dominantBaseline="central" fontSize="7" fill="white" fontWeight="bold">
                       {score}
                     </text>
@@ -700,7 +698,7 @@ export default function FloorPlanEditor({
                   fill="#374151"
                   className="dark:fill-gray-300"
                 >
-                  {profile ? profile.name : (isArabic ? seat.label : seat.label.replace('مقعد', 'Seat'))}
+                  {profile ? profile.name : seat.label}
                 </text>
               </g>
             );
@@ -716,29 +714,29 @@ export default function FloorPlanEditor({
         const selectedUserValue = seat.userId && profiles.some(p => p.id === seat.userId)
           ? seat.userId
           : '__none__';
-        const env = calculateSeatEnvironment(seat, plan, plan.city);
+        const env = calculateSeatEnvironment(seat, plan, city, simulationDate);
 
         return (
           <div className="p-4 bg-card border border-border rounded-xl">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-sm">{seat.label}</h3>
               <Button size="sm" variant="outline" className="text-xs h-6" onClick={() => deleteSeat(seat.id)}>
-                {isArabic ? 'حذف المقعد' : 'Delete Seat'}
+                Delete Seat
               </Button>
             </div>
 
             {/* Assign employee */}
             <div className="mb-3">
-              <label className="text-xs text-muted-foreground mb-1 block">{isArabic ? 'تعيين موظف:' : 'Assign Employee:'}</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Assign Employee:</label>
               <Select
                 value={selectedUserValue}
                 onValueChange={v => assignUserToSeat(seat.id, v === '__none__' ? '' : v)}
               >
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder={isArabic ? 'اختر موظفاً...' : 'Select employee...'} />
+                  <SelectValue placeholder="Select employee..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">{isArabic ? '— بدون موظف —' : '— Unassigned —'}</SelectItem>
+                  <SelectItem value="__none__">— Unassigned —</SelectItem>
                   {profiles.map(p => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.avatar} {p.name} — {p.role}
@@ -752,7 +750,7 @@ export default function FloorPlanEditor({
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="bg-muted rounded-lg p-2 text-center">
                 <div className="font-bold text-base">{env.estimatedTemperature}°C</div>
-                <div className="text-muted-foreground">{isArabic ? 'حرارة' : 'Temp'}</div>
+                <div className="text-muted-foreground">Temp</div>
               </div>
               <div className="bg-muted rounded-lg p-2 text-center">
                 <div className="font-bold text-base">{env.estimatedIlluminance}</div>
@@ -766,22 +764,12 @@ export default function FloorPlanEditor({
 
             {env.nearestWindowOrientation && (
               <p className="text-xs text-muted-foreground mt-2">
-                {isArabic
-                  ? (
-                    <>
-                      أقرب نافذة: {env.distanceToNearestWindow}م — واجهة {env.nearestWindowOrientation === 'south' ? 'جنوبية' :
-                        env.nearestWindowOrientation === 'north' ? 'شمالية' :
-                        env.nearestWindowOrientation === 'east' ? 'شرقية' : 'غربية'}
-                    </>
-                  )
-                  : (
-                    <>
+                <>
                       Nearest window: {env.distanceToNearestWindow}m —
                       {env.nearestWindowOrientation === 'south' ? ' South' :
                         env.nearestWindowOrientation === 'north' ? ' North' :
                         env.nearestWindowOrientation === 'east' ? ' East' : ' West'} facade
                     </>
-                  )}
               </p>
             )}
           </div>

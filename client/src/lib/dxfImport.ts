@@ -462,7 +462,7 @@ function createSeatGrid(
       userId: null,
       x: point.x,
       y: point.y,
-      label: `مقعد ${index + 1}`,
+      label: ` ${index + 1}`,
     });
   }
 
@@ -670,7 +670,7 @@ export function parseDxfFloorPlan(text: string, fileName = "imported-dxf"): Floo
       userId: null,
       x: point.x,
       y: point.y,
-      label: `مقعد ${index + 1}`,
+      label: ` ${index + 1}`,
     } satisfies Seat;
   });
 

@@ -1,6 +1,5 @@
 /**
- * EmployeeForm — نموذج إدخال بيانات موظف جديد أو تعديل موظف موجود
- * يشمل: الاسم، الوظيفة، نوع العمل، التفضيلات البيئية، الحالات الصحية
+ * Employee form for adding or editing employee profiles.
  */
 import React, { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
@@ -16,7 +15,7 @@ import {
   DEFAULT_PREFERENCES_BY_ACTIVITY,
   applyHealthAdjustments,
   EnvironmentalPreferences,
-  WELL_RANGES,
+  comfort_RANGES,
 } from '@/lib/userProfileEngine';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,13 +93,13 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
     if (!name.trim()) return;
 
     const basePrefs = { ...DEFAULT_PREFERENCES_BY_ACTIVITY[activity] } as EnvironmentalPreferences;
-    const adjustedPrefs = applyHealthAdjustments(basePrefs, healthConditions);
-    const finalPrefs: EnvironmentalPreferences = {
-      ...adjustedPrefs,
+    const selectedPrefs: EnvironmentalPreferences = {
+      ...basePrefs,
       temperaturePreferred: tempPref,
       illuminancePreferred: illumPref,
       noisePreferred: noisePref,
     };
+    const finalPrefs = applyHealthAdjustments(selectedPrefs, healthConditions);
 
     if (editProfile) {
       updateProfile(editProfile.id, {
@@ -119,7 +118,7 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
         secondaryActivities: [],
         healthConditions,
         preferences: finalPrefs,
-        wellnessScore: 70,
+        comfortScore: 70,
         createdAt: new Date(),
         lastUpdated: new Date(),
         preferredZones: [],
@@ -133,12 +132,12 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
   return (
     <div className="flex flex-col gap-4 p-4 max-h-[80vh] overflow-y-auto">
       <h3 className="text-base font-semibold text-foreground">
-        {editProfile ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد'}
+        {editProfile ? 'Edit employee' : 'Add new employee'}
       </h3>
 
       {/* Avatar */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">الصورة الرمزية</Label>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">Avatar</Label>
         <div className="flex flex-wrap gap-2">
           {AVATARS.map(a => (
             <button
@@ -157,22 +156,22 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
       {/* Basic info */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">الاسم *</Label>
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="مثال: سارة الأحمد" className="h-8 text-sm" />
+          <Label className="text-xs text-muted-foreground mb-1 block">Name *</Label>
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Example: Sarah Ahmed" className="h-8 text-sm" />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">المسمى الوظيفي</Label>
-          <Input value={role} onChange={e => setRole(e.target.value)} placeholder="مثال: مصمم جرافيك" className="h-8 text-sm" />
+          <Label className="text-xs text-muted-foreground mb-1 block">Role</Label>
+          <Input value={role} onChange={e => setRole(e.target.value)} placeholder="Example: Graphic designer" className="h-8 text-sm" />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">القسم</Label>
-          <Input value={department} onChange={e => setDepartment(e.target.value)} placeholder="مثال: التصميم" className="h-8 text-sm" />
+          <Label className="text-xs text-muted-foreground mb-1 block">Department</Label>
+          <Input value={department} onChange={e => setDepartment(e.target.value)} placeholder="Example: Design" className="h-8 text-sm" />
         </div>
       </div>
 
       {/* Work style */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">أسلوب العمل</Label>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">Work style</Label>
         <div className="flex flex-wrap gap-2">
           {WORK_STYLES.map(ws => (
             <button
@@ -182,7 +181,7 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
                 workStyle === ws ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >
-              {WORK_STYLE_LABELS[ws].split(' — ')[0]}
+              {WORK_STYLE_LABELS[ws].split(' - ')[0]}
             </button>
           ))}
         </div>
@@ -190,7 +189,7 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
 
       {/* Primary activity */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">طبيعة العمل الأساسية</Label>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">Primary activity</Label>
         <div className="flex flex-wrap gap-2">
           {ACTIVITIES.map(act => (
             <button
@@ -204,12 +203,12 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">اختيار طبيعة العمل يُعيّن التفضيلات البيئية تلقائياً</p>
+        <p className="text-[10px] text-muted-foreground mt-1">Choosing an activity automatically sets environmental preferences</p>
       </div>
 
       {/* Health conditions */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">الحالات الصحية الخاصة</Label>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">Health considerations</Label>
         <div className="flex flex-wrap gap-2">
           {HEALTH_CONDITIONS.map(cond => (
             <button
@@ -233,7 +232,7 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="text-xs text-primary hover:underline flex items-center gap-1"
         >
-          {showAdvanced ? '▲' : '▼'} التفضيلات البيئية التفصيلية
+          {showAdvanced ? '▲' : '▼'} Detailed environmental preferences
         </button>
 
         {showAdvanced && (
@@ -241,63 +240,63 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
             {/* Temperature */}
             <div>
               <div className="flex justify-between mb-1">
-                <Label className="text-xs text-muted-foreground">درجة الحرارة المفضّلة</Label>
+                <Label className="text-xs text-muted-foreground">Preferred temperature</Label>
                 <span className="text-xs font-semibold text-foreground">{tempPref}°C</span>
               </div>
               <Slider
-                min={WELL_RANGES.temperature.min}
-                max={WELL_RANGES.temperature.max}
+                min={comfort_RANGES.temperature.min}
+                max={comfort_RANGES.temperature.max}
                 step={0.5}
                 value={[tempPref]}
                 onValueChange={([v]) => setTempPref(v)}
                 className="w-full"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                <span>{WELL_RANGES.temperature.min}°C</span>
-                <span className="text-emerald-600 dark:text-emerald-400">WELL: {WELL_RANGES.temperature.wellMin}–{WELL_RANGES.temperature.wellMax}°C</span>
-                <span>{WELL_RANGES.temperature.max}°C</span>
+                <span>{comfort_RANGES.temperature.min}°C</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Target: {comfort_RANGES.temperature.comfortMin}-{comfort_RANGES.temperature.comfortMax}°C</span>
+                <span>{comfort_RANGES.temperature.max}°C</span>
               </div>
             </div>
 
             {/* Illuminance */}
             <div>
               <div className="flex justify-between mb-1">
-                <Label className="text-xs text-muted-foreground">مستوى الإضاءة المفضّل</Label>
+                <Label className="text-xs text-muted-foreground">Preferred illuminance</Label>
                 <span className="text-xs font-semibold text-foreground">{illumPref} lux</span>
               </div>
               <Slider
-                min={WELL_RANGES.illuminance.min}
-                max={WELL_RANGES.illuminance.max}
+                min={comfort_RANGES.illuminance.min}
+                max={comfort_RANGES.illuminance.max}
                 step={25}
                 value={[illumPref]}
                 onValueChange={([v]) => setIllumPref(v)}
                 className="w-full"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                <span>{WELL_RANGES.illuminance.min}</span>
-                <span className="text-emerald-600 dark:text-emerald-400">WELL: {WELL_RANGES.illuminance.wellMin}–{WELL_RANGES.illuminance.wellMax} lux</span>
-                <span>{WELL_RANGES.illuminance.max}</span>
+                <span>{comfort_RANGES.illuminance.min}</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Target: {comfort_RANGES.illuminance.comfortMin}-{comfort_RANGES.illuminance.comfortMax} lux</span>
+                <span>{comfort_RANGES.illuminance.max}</span>
               </div>
             </div>
 
             {/* Noise */}
             <div>
               <div className="flex justify-between mb-1">
-                <Label className="text-xs text-muted-foreground">الحد الأقصى للضوضاء المقبولة</Label>
+                <Label className="text-xs text-muted-foreground">Preferred maximum noise</Label>
                 <span className="text-xs font-semibold text-foreground">{noisePref} dB</span>
               </div>
               <Slider
-                min={WELL_RANGES.noise.min}
-                max={WELL_RANGES.noise.max}
+                min={comfort_RANGES.noise.min}
+                max={comfort_RANGES.noise.max}
                 step={1}
                 value={[noisePref]}
                 onValueChange={([v]) => setNoisePref(v)}
                 className="w-full"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                <span>{WELL_RANGES.noise.min} dB</span>
-                <span className="text-emerald-600 dark:text-emerald-400">WELL: {WELL_RANGES.noise.wellMin}–{WELL_RANGES.noise.wellMax} dB</span>
-                <span>{WELL_RANGES.noise.max} dB</span>
+                <span>{comfort_RANGES.noise.min} dB</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Target: {comfort_RANGES.noise.comfortMin}-{comfort_RANGES.noise.comfortMax} dB</span>
+                <span>{comfort_RANGES.noise.max} dB</span>
               </div>
             </div>
           </div>
@@ -306,11 +305,11 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
 
       {/* Notes */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">ملاحظات خاصة</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">Notes</Label>
         <textarea
           value={notes}
           onChange={e => setNotes(e.target.value)}
-          placeholder="أي ملاحظات إضافية عن احتياجات هذا الموظف..."
+          placeholder="Any additional notes about this employee..."
           className="w-full text-sm bg-muted/30 border border-border rounded-lg p-2 resize-none h-16 focus:outline-none focus:ring-1 focus:ring-primary"
         />
       </div>
@@ -318,10 +317,10 @@ export default function EmployeeForm({ editProfile, onClose }: Props) {
       {/* Actions */}
       <div className="flex gap-2 pt-1">
         <Button onClick={handleSubmit} disabled={!name.trim()} className="flex-1 h-8 text-sm">
-          {editProfile ? 'حفظ التعديلات' : 'إضافة الموظف'}
+          {editProfile ? 'Save changes' : 'Add employee'}
         </Button>
         <Button variant="outline" onClick={onClose} className="h-8 text-sm px-4">
-          إلغاء
+          Cancel
         </Button>
       </div>
     </div>

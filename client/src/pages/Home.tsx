@@ -1,9 +1,3 @@
-/**
- * Home — Adaptive AI Space Planning Tool
- * Design: Scandinavian Wellness Dashboard
- * Three-tool architect interface: Diagnosis, Generation, Comparison
- * Built on an interactive floor plan editor.
- */
 import React, { useState } from 'react';
 import { ArchitectProvider, useArchitect } from '@/contexts/ArchitectContext';
 import FloorPlanEditor from '@/components/FloorPlanEditor';
@@ -16,36 +10,26 @@ import PlanImportPanel from '@/components/PlanImportPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { UserProfile } from '@/lib/userProfileEngine';
-import { createDefaultAfterPlan, createDefaultFloorPlan, FloorPlan } from '@/lib/floorPlanEngine';
+import { CITY_OPTIONS, createDefaultAfterPlan, createDefaultFloorPlan, FloorPlan } from '@/lib/floorPlanEngine';
 
-const CITIES = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'المدينة المنورة', 'أبها', 'تبوك', 'أبوظبي', 'دبي', 'القاهرة', 'بيروت', 'عمّان'];
-
-const CITY_LABELS_EN: Record<string, string> = {
-  'الرياض': 'Riyadh',
-  'جدة': 'Jeddah',
-  'الدمام': 'Dammam',
-  'مكة المكرمة': 'Makkah',
-  'المدينة المنورة': 'Madinah',
-  'أبها': 'Abha',
-  'تبوك': 'Tabuk',
-  'أبوظبي': 'Abu Dhabi',
-  'دبي': 'Dubai',
-  'القاهرة': 'Cairo',
-  'بيروت': 'Beirut',
-  'عمّان': 'Amman',
-};
-
-const TABS = (isArabic: boolean) => ([
-  { id: 'plan', label: isArabic ? 'المخطط' : 'Plan', icon: '📐', desc: isArabic ? 'ارسم وعيّن المقاعد' : 'Draw and assign seats' },
-  { id: 'diagnosis', label: isArabic ? 'التشخيص' : 'Diagnosis', icon: '🔍', desc: isArabic ? 'فجوات كل موظف' : 'Employee gap analysis' },
-  { id: 'generation', label: isArabic ? 'التوليد' : 'Generation', icon: '⚙️', desc: isArabic ? 'البطاقة التصميمية' : 'Design intervention card' },
-  { id: 'comparison', label: isArabic ? 'المقارنة' : 'Comparison', icon: '⚖️', desc: isArabic ? 'قبل وبعد التدخل' : 'Before and after impact' },
-] as const);
+const TABS = [
+  { id: 'plan', label: 'Plan', icon: '📐', desc: 'Draw and assign seats' },
+  { id: 'diagnosis', label: 'Diagnosis', icon: '🔍', desc: 'Employee gap analysis' },
+  { id: 'generation', label: 'Generation', icon: '⚙️', desc: 'Design intervention card' },
+  { id: 'comparison', label: 'Comparison', icon: '⚖️', desc: 'Before and after impact' },
+] as const;
 
 type TabId = 'plan' | 'diagnosis' | 'generation' | 'comparison';
+
+const HEALTH_LABELS: Record<string, string> = {
+  heat_sensitive: 'Heat sensitive',
+  migraine: 'Migraine',
+  asthma: 'Asthma',
+  eye_strain: 'Eye strain',
+  back_pain: 'Back pain',
+  cold_sensitive: 'Cold sensitive',
+};
 
 function AppContent() {
   const {
@@ -55,31 +39,6 @@ function AppContent() {
     activeTab, setActiveTab,
     setPlanAfter,
   } = useArchitect();
-  const { language, toggleLanguage, isArabic } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
-  const tabs = TABS(isArabic);
-
-  const text = {
-    appTitle: isArabic ? 'أداة التخطيط التكيّفي' : 'Adaptive Planning Tool',
-    city: isArabic ? 'المدينة:' : 'City:',
-    assignedSeats: isArabic ? 'مقعد مُعيَّن' : 'assigned seats',
-    employees: isArabic ? 'موظف' : 'employees',
-    interactivePlan: isArabic ? 'المخطط التفاعلي' : 'Interactive Plan',
-    clickSeat: isArabic ? 'اضغط على مقعد لتعيين موظف' : 'Click a seat to assign an employee',
-    employeeProfiles: isArabic ? 'ملفات الموظفين' : 'Employee Profiles',
-    addEmployee: isArabic ? 'إضافة موظف' : 'Add Employee',
-    unassigned: isArabic ? 'غير مُعيَّن' : 'Unassigned',
-    edit: isArabic ? 'تعديل' : 'Edit',
-    delete: isArabic ? 'حذف' : 'Delete',
-    addNewEmployee: isArabic ? 'إضافة موظف جديد' : 'Add New Employee',
-    footer1: isArabic ? 'أداة تحليل رفاهية بيئة العمل' : 'Workplace Wellness Analysis Tool',
-    footer2: isArabic
-      ? 'المحاكاة البيئية مبنية على معادلات الكسب الحراري وتوهين الضوء والضوضاء وفق معايير WELL v2'
-      : 'Environmental simulation uses thermal gain, lighting, and noise attenuation equations aligned to WELL v2.',
-    close: isArabic ? 'إغلاق' : 'Close',
-    modeLight: isArabic ? 'فاتح' : 'Light',
-    modeDark: isArabic ? 'داكن' : 'Dark',
-  };
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProfile, setEditingProfile] = useState<UserProfile | null>(null);
@@ -106,61 +65,48 @@ function AppContent() {
   };
 
   const handleResetPlan = () => {
-    const defaultPlan = createDefaultFloorPlan();
-    handlePlanImport(defaultPlan);
+    handlePlanImport(createDefaultFloorPlan());
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground" dir={isArabic ? 'rtl' : 'ltr'}>
-      {/* Header */}
+    <div className="min-h-screen bg-background text-foreground" dir="ltr">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">W</div>
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">A</div>
             <div>
-              <h1 className="text-sm font-bold leading-tight">{text.appTitle}</h1>
-              <p className="text-[10px] text-muted-foreground">WELL v2 — Adaptive AI Space Planning</p>
+              <h1 className="text-sm font-bold leading-tight">Adaptive Planning Tool</h1>
+              <p className="text-[10px] text-muted-foreground">Adaptive AI Space Planning</p>
             </div>
           </div>
 
           <div className="flex-1" />
 
-          {/* City selector */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{text.city}</span>
+            <span className="text-xs text-muted-foreground">City:</span>
             <Select value={city} onValueChange={setCity}>
               <SelectTrigger className="h-7 w-32 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CITIES.map(c => <SelectItem key={c} value={c}>{isArabic ? c : (CITY_LABELS_EN[c] ?? c)}</SelectItem>)}
+                {CITY_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={toggleLanguage}>
-            {language === 'ar' ? 'EN' : 'AR'}
-          </Button>
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={toggleTheme}>
-            {theme === 'dark' ? text.modeLight : text.modeDark}
-          </Button>
-
-          {/* Stats */}
           <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
-            <span>🪑 {assignedCount}/{totalSeats} {text.assignedSeats}</span>
-            <span>👥 {profiles.length} {text.employees}</span>
+            <span>🪑 {assignedCount}/{totalSeats} assigned seats</span>
+            <span>👥 {profiles.length} employees</span>
           </div>
         </div>
       </header>
 
-      {/* Time & Season Bar — always visible */}
       <TimeSeasonBar />
 
-      {/* Tab navigation */}
       <div className="border-b border-border bg-card/50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-1 py-2">
-            {tabs.map(tab => (
+            {TABS.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabId)}
@@ -179,11 +125,9 @@ function AppContent() {
         </div>
       </div>
 
-      {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Tab description */}
         <div className="mb-4">
-          {tabs.map(tab => activeTab === tab.id && (
+          {TABS.map(tab => activeTab === tab.id && (
             <div key={tab.id} className="flex items-center gap-2">
               <span className="text-lg">{tab.icon}</span>
               <div>
@@ -194,7 +138,6 @@ function AppContent() {
           ))}
         </div>
 
-        {/* Plan tab — full width */}
         {activeTab === 'plan' && (
           <div className="space-y-4">
             <PlanImportPanel
@@ -205,9 +148,9 @@ function AppContent() {
 
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold">{text.interactivePlan}</h3>
+                <h3 className="text-sm font-semibold">Interactive Plan</h3>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{text.clickSeat}</span>
+                  <span>Click a seat to assign an employee</span>
                 </div>
               </div>
               <FloorPlanEditor
@@ -219,16 +162,15 @@ function AppContent() {
               />
             </div>
 
-            {/* Employees list */}
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold">{text.employeeProfiles} ({profiles.length})</h3>
+                <h3 className="text-sm font-semibold">Employee Profiles ({profiles.length})</h3>
                 <Button
                   size="sm"
                   onClick={() => { setEditingProfile(null); setShowAddForm(true); }}
                   className="h-7 text-xs gap-1"
                 >
-                  <span>+</span> {text.addEmployee}
+                  <span>+</span> Add Employee
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -238,23 +180,15 @@ function AppContent() {
                     <div key={p.id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-border group">
                       <span className="text-xl mt-0.5">{p.avatar}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs font-semibold truncate">{p.name}</p>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground truncate">{p.role}{p.department ? ` — ${p.department}` : ''}</p>
+                        <p className="text-xs font-semibold truncate">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{p.role}{p.department ? ` - ${p.department}` : ''}</p>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {p.healthConditions.filter(h => h !== 'none').map(h => (
                             <Badge key={h} variant="outline" className="text-[9px] px-1 py-0">
-                              {h === 'heat_sensitive' ? '🌡️ حساس للحرارة' :
-                               h === 'migraine' ? '🤕 صداع نصفي' :
-                               h === 'asthma' ? '💨 ربو' :
-                               h === 'eye_strain' ? '👁️ إجهاد بصري' :
-                               h === 'back_pain' ? '🦴 آلام ظهر' :
-                               h === 'cold_sensitive' ? '🥶 حساس للبرد' : h}
+                              {HEALTH_LABELS[h] ?? h}
                             </Badge>
                           ))}
                         </div>
-                        {/* Preferences summary */}
                         <div className="flex gap-2 mt-1.5 text-[9px] text-muted-foreground">
                           <span>🌡️ {p.preferences.temperaturePreferred}°C</span>
                           <span>💡 {p.preferences.illuminancePreferred} lux</span>
@@ -267,8 +201,8 @@ function AppContent() {
                             {seat.label}
                           </Badge>
                         ) : (
-                            <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                            {text.unassigned}
+                          <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                            Unassigned
                           </Badge>
                         )}
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -276,14 +210,14 @@ function AppContent() {
                             onClick={() => handleEditProfile(p)}
                             className="text-[10px] text-primary hover:underline"
                           >
-                            {text.edit}
+                            Edit
                           </button>
                           <span className="text-muted-foreground text-[10px]">|</span>
                           <button
                             onClick={() => deleteProfile(p.id)}
                             className="text-[10px] text-destructive hover:underline"
                           >
-                            {text.delete}
+                            Delete
                           </button>
                         </div>
                       </div>
@@ -291,34 +225,30 @@ function AppContent() {
                   );
                 })}
 
-                {/* Add employee card */}
                 <button
                   onClick={() => { setEditingProfile(null); setShowAddForm(true); }}
                   className="flex items-center justify-center gap-2 p-3 bg-muted/10 rounded-lg border border-dashed border-border text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all text-xs"
                 >
                   <span className="text-lg">+</span>
-                  <span>{text.addNewEmployee}</span>
+                  <span>Add New Employee</span>
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Diagnosis tab */}
         {activeTab === 'diagnosis' && (
           <div className="max-w-3xl">
             <DiagnosisPanel />
           </div>
         )}
 
-        {/* Generation tab */}
         {activeTab === 'generation' && (
           <div className="max-w-3xl">
             <GenerationPanel />
           </div>
         )}
 
-        {/* Comparison tab */}
         {activeTab === 'comparison' && (
           <div className="max-w-3xl">
             <ComparisonPanel />
@@ -326,20 +256,18 @@ function AppContent() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border mt-12 py-4 text-center text-xs text-muted-foreground">
-        <p>Adaptive AI Space Planning — WELL v2 | {text.footer1}</p>
-        <p className="mt-1 opacity-60">{text.footer2}</p>
+        <p>Adaptive AI Space Planning | Workplace Comfort Analysis Tool</p>
+        <p className="mt-1 opacity-60">Environmental simulation uses thermal gain, lighting, and noise attenuation equations.</p>
       </footer>
 
-      {/* Employee Form Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={isArabic ? 'rtl' : 'ltr'}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="ltr">
           <button
             type="button"
             className="absolute inset-0 bg-black/50"
             onClick={handleCloseForm}
-            aria-label={text.close}
+            aria-label="Close"
           />
           <div className="relative w-full max-w-lg max-h-[90vh] overflow-hidden rounded-xl border border-border bg-background shadow-xl">
             <EmployeeForm

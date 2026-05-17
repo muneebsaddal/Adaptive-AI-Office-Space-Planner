@@ -460,7 +460,7 @@ def _create_seat_grid(bounds: dict[str, float], layout: dict[str, float], count:
         y = bounds["maxY"] - (usable_height * (row + 1)) / (rows + 1)
         sx, sy = _to_canvas(x, y, layout["minX"], layout["maxY"], layout["scale"], layout["offsetX"], layout["offsetY"])
         sx, sy = _clamp_seat(sx, sy)
-        seats.append({"id": f"seat-{idx+1}", "userId": None, "x": sx, "y": sy, "label": f"مقعد {idx+1}"})
+        seats.append({"id": f"seat-{idx+1}", "userId": None, "x": sx, "y": sy, "label": f"Seat {idx+1}"})
     return seats
 
 
@@ -576,7 +576,7 @@ def _segments_to_plan(
             sx, sy = _to_canvas(sx_m, sy_m, layout["minX"], layout["maxY"], layout["scale"], layout["offsetX"], layout["offsetY"])
             if CANVAS_MARGIN <= sx <= CANVAS_WIDTH - CANVAS_MARGIN and CANVAS_MARGIN <= sy <= CANVAS_HEIGHT - CANVAS_MARGIN:
                 sx, sy = _clamp_seat(sx, sy)
-                mapped_seats.append({"id": f"seat-{len(mapped_seats)+1}", "userId": None, "x": sx, "y": sy, "label": f"مقعد {len(mapped_seats)+1}"})
+                mapped_seats.append({"id": f"seat-{len(mapped_seats)+1}", "userId": None, "x": sx, "y": sy, "label": f"Seat {len(mapped_seats)+1}"})
             else:
                 rejected_seats += 1
     seats = mapped_seats if len(mapped_seats) >= 3 else _create_seat_grid(bounds, layout, 6)
@@ -596,7 +596,7 @@ def _segments_to_plan(
         "width": CANVAS_WIDTH,
         "height": CANVAS_HEIGHT,
         "scale": scale,
-        "city": "الرياض",
+        "city": "Riyadh",
         "buildingOrientation": 0,
         "walls": walls,
         "windows": windows,

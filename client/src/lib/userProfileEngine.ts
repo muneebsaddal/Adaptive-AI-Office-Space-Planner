@@ -1,40 +1,40 @@
 /**
- * User Profile Engine — WELL v2 Adaptive Space Planning
+ * User Profile Engine — comfort Adaptive Space Planning
  * =====================================================
- * Design Philosophy: Scandinavian Wellness Dashboard
+ * Design Philosophy: Scandinavian Comfort Dashboard
  * Purpose: Manages user profiles with personal environmental preferences
- * aligned with WELL v2 standards. Each user has a unique environmental
+ * aligned with comfort standards. Each user has a unique environmental
  * fingerprint that drives personalized space recommendations.
  */
 
-// ─── WELL v2 Environmental Preference Ranges ───────────────────────────────
+// ─── comfort Environmental Preference Ranges ───────────────────────────────
 
-export const WELL_RANGES = {
-  temperature: { min: 18, max: 28, wellMin: 20, wellMax: 26, unit: '°C' },
-  illuminance: { min: 100, max: 1000, wellMin: 300, wellMax: 750, unit: 'lux' },
-  noise: { min: 25, max: 70, wellMin: 30, wellMax: 50, unit: 'dB' },
-  co2: { min: 400, max: 1500, wellMin: 400, wellMax: 1000, unit: 'ppm' },
-  humidity: { min: 20, max: 80, wellMin: 30, wellMax: 60, unit: '%' },
-  airflow: { min: 0, max: 10, wellMin: 0.1, wellMax: 0.8, unit: 'm/s' },
+export const comfort_RANGES = {
+  temperature: { min: 18, max: 28, comfortMin: 20, comfortMax: 26, unit: '°C' },
+  illuminance: { min: 100, max: 1000, comfortMin: 300, comfortMax: 750, unit: 'lux' },
+  noise: { min: 25, max: 70, comfortMin: 30, comfortMax: 50, unit: 'dB' },
+  co2: { min: 400, max: 1500, comfortMin: 400, comfortMax: 1000, unit: 'ppm' },
+  humidity: { min: 20, max: 80, comfortMin: 30, comfortMax: 60, unit: '%' },
+  airflow: { min: 0, max: 10, comfortMin: 0.1, comfortMax: 0.8, unit: 'm/s' },
 };
 
 // ─── User Activity Types ────────────────────────────────────────────────────
 
 export type ActivityType =
-  | 'deep_focus'      // تركيز عميق
-  | 'collaborative'   // تعاوني
-  | 'creative'        // إبداعي
-  | 'administrative'  // إداري
-  | 'meeting'         // اجتماعات
-  | 'learning';       // تعلّم
+  | 'deep_focus'      // Deep focus
+  | 'collaborative'   // 
+  | 'creative'        // 
+  | 'administrative'  // 
+  | 'meeting'         // Meetings
+  | 'learning';       // 
 
 export const ACTIVITY_LABELS: Record<ActivityType, string> = {
-  deep_focus: 'تركيز عميق',
-  collaborative: 'عمل تعاوني',
-  creative: 'عمل إبداعي',
-  administrative: 'أعمال إدارية',
-  meeting: 'اجتماعات',
-  learning: 'تعلّم وتطوير',
+  deep_focus: 'Deep focus',
+  collaborative: 'Collaborative work',
+  creative: 'Creative work',
+  administrative: 'Administrative work',
+  meeting: 'Meetings',
+  learning: 'Learning and development',
 };
 
 // ─── Sensitivity Levels ─────────────────────────────────────────────────────
@@ -42,30 +42,30 @@ export const ACTIVITY_LABELS: Record<ActivityType, string> = {
 export type SensitivityLevel = 'low' | 'medium' | 'high';
 
 export const SENSITIVITY_LABELS: Record<SensitivityLevel, string> = {
-  low: 'منخفضة',
-  medium: 'متوسطة',
-  high: 'عالية',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
 };
 
-// ─── Health Conditions affecting WELL preferences ───────────────────────────
+// ─── Health Conditions affecting comfort preferences ───────────────────────────
 
 export type HealthCondition =
   | 'none'
-  | 'asthma'          // ربو — يحتاج هواء أنقى
-  | 'migraine'        // صداع نصفي — يحتاج إضاءة أخف وهدوء
-  | 'back_pain'       // آلام ظهر — يحتاج حركة أكثر
-  | 'eye_strain'      // إجهاد بصري — يحتاج إضاءة مناسبة
-  | 'heat_sensitive'  // حساسية للحرارة
-  | 'cold_sensitive'; // حساسية للبرودة
+  | 'asthma'          //  —  Air 
+  | 'migraine'        // Migraine —  Light  
+  | 'back_pain'       //   —   
+  | 'eye_strain'      // Eye strain —  Light 
+  | 'heat_sensitive'  // Heat sensitivity
+  | 'cold_sensitive'; // Cold sensitivity
 
 export const HEALTH_LABELS: Record<HealthCondition, string> = {
-  none: 'لا يوجد',
-  asthma: 'ربو / حساسية تنفسية',
-  migraine: 'صداع نصفي',
-  back_pain: 'آلام الظهر',
-  eye_strain: 'إجهاد بصري',
-  heat_sensitive: 'حساسية للحرارة',
-  cold_sensitive: 'حساسية للبرودة',
+  none: 'None',
+  asthma: 'Asthma / respiratory sensitivity',
+  migraine: 'Migraine',
+  back_pain: 'Back pain',
+  eye_strain: 'Eye strain',
+  heat_sensitive: 'Heat sensitivity',
+  cold_sensitive: 'Cold sensitivity',
 };
 
 // ─── Work Style ─────────────────────────────────────────────────────────────
@@ -73,38 +73,38 @@ export const HEALTH_LABELS: Record<HealthCondition, string> = {
 export type WorkStyle = 'introvert' | 'extrovert' | 'ambivert';
 
 export const WORK_STYLE_LABELS: Record<WorkStyle, string> = {
-  introvert: 'انطوائي — يُفضّل العمل المنفرد',
-  extrovert: 'انبساطي — يُفضّل التفاعل الاجتماعي',
-  ambivert: 'متوازن — يتكيّف مع الوضعين',
+  introvert: 'Introvert - prefers solo work',
+  extrovert: 'Extrovert - prefers social interaction',
+  ambivert: 'Ambivert - adapts to both modes',
 };
 
 // ─── Environmental Preferences ──────────────────────────────────────────────
 
 export interface EnvironmentalPreferences {
-  // درجة الحرارة المفضّلة
+  // Temperature 
   temperaturePreferred: number;       // 18–28°C
-  temperatureTolerance: number;       // ±درجات مقبولة
+  temperatureTolerance: number;       // ± 
 
-  // الإضاءة المفضّلة
+  // Light 
   illuminancePreferred: number;       // 100–1000 lux
-  illuminanceTolerance: number;       // ±lux مقبولة
-  naturalLightPreference: 'high' | 'medium' | 'low'; // تفضيل الضوء الطبيعي
+  illuminanceTolerance: number;       // ±lux 
+  naturalLightPreference: 'high' | 'medium' | 'low'; //   
 
-  // الضوضاء
+  // Noise
   noisePreferred: number;             // 25–70 dB
-  noiseTolerance: number;             // ±dB مقبولة
+  noiseTolerance: number;             // ±dB 
   noiseSensitivity: SensitivityLevel;
 
-  // جودة الهواء
+  //  Air
   co2Sensitivity: SensitivityLevel;
   ventilationPreference: 'high' | 'medium' | 'low';
 
-  // الرطوبة
+  // Humidity
   humidityPreferred: number;          // 30–60%
   humidityTolerance: number;
 
-  // الحركة والنشاط
-  movementFrequency: 'frequent' | 'moderate' | 'rare'; // تكرار الحركة
+  //  
+  movementFrequency: 'frequent' | 'moderate' | 'rare'; //  
   standingDeskPreference: boolean;
 }
 
@@ -113,19 +113,19 @@ export interface EnvironmentalPreferences {
 export interface UserProfile {
   id: string;
   name: string;
-  role: string;                        // المسمى الوظيفي
-  department: string;                  // القسم
-  avatar: string;                      // رمز الأفاتار (emoji)
+  role: string;                        // Role
+  department: string;                  // Department
+  avatar: string;                      //   (emoji)
   workStyle: WorkStyle;
   primaryActivity: ActivityType;
   secondaryActivities: ActivityType[];
   healthConditions: HealthCondition[];
   preferences: EnvironmentalPreferences;
-  wellnessScore: number;               // درجة الرفاهية الشخصية (0–100)
+  comfortScore: number;               //    (0–100)
   createdAt: Date;
   lastUpdated: Date;
-  preferredZones: string[];            // المناطق المفضّلة
-  notes: string;                       // ملاحظات خاصة
+  preferredZones: string[];            //  
+  notes: string;                       // Notes
 }
 
 // ─── Default Preferences by Activity Type ───────────────────────────────────
@@ -270,20 +270,20 @@ export function applyHealthAdjustments(
   return adjusted;
 }
 
-// ─── Personal Wellness Score Calculator ─────────────────────────────────────
+// ─── Personal Comfort Score Calculator ─────────────────────────────────────
 
-export interface WellnessMatch {
+export interface ComfortMatch {
   overall: number;           // 0–100
   temperature: number;
   illuminance: number;
   noise: number;
   airQuality: number;
   humidity: number;
-  details: string[];         // تفاصيل التطابق
-  mismatches: string[];      // حالات عدم التطابق
+  details: string[];         //  
+  mismatches: string[];      //   
 }
 
-export function calculateWellnessMatch(
+export function calculateComfortMatch(
   profile: UserProfile,
   sensorData: {
     temperature: number;
@@ -292,7 +292,7 @@ export function calculateWellnessMatch(
     co2: number;
     humidity: number;
   }
-): WellnessMatch {
+): ComfortMatch {
   const p = profile.preferences;
   const details: string[] = [];
   const mismatches: string[] = [];
@@ -300,35 +300,35 @@ export function calculateWellnessMatch(
   // Temperature match
   const tempDiff = Math.abs(sensorData.temperature - p.temperaturePreferred);
   const tempScore = Math.max(0, 100 - (tempDiff / p.temperatureTolerance) * 50);
-  if (tempScore >= 80) details.push(`درجة الحرارة مناسبة (${sensorData.temperature}°C)`);
-  else mismatches.push(`درجة الحرارة ${sensorData.temperature}°C بعيدة عن المفضّلة ${p.temperaturePreferred}°C`);
+  if (tempScore >= 80) details.push(`Temperature  (${sensorData.temperature}°C)`);
+  else mismatches.push(`Temperature ${sensorData.temperature}°C    ${p.temperaturePreferred}°C`);
 
   // Illuminance match
   const luxDiff = Math.abs(sensorData.illuminance - p.illuminancePreferred);
   const luxScore = Math.max(0, 100 - (luxDiff / p.illuminanceTolerance) * 50);
-  if (luxScore >= 80) details.push(`مستوى الإضاءة مناسب (${sensorData.illuminance} lux)`);
-  else mismatches.push(`الإضاءة ${sensorData.illuminance} lux بعيدة عن المفضّلة ${p.illuminancePreferred} lux`);
+  if (luxScore >= 80) details.push(`Illuminance  (${sensorData.illuminance} lux)`);
+  else mismatches.push(`Light ${sensorData.illuminance} lux    ${p.illuminancePreferred} lux`);
 
   // Noise match
   const noiseDiff = Math.abs(sensorData.noise - p.noisePreferred);
   const noiseSensMultiplier = p.noiseSensitivity === 'high' ? 2 : p.noiseSensitivity === 'medium' ? 1.5 : 1;
   const noiseScore = Math.max(0, 100 - (noiseDiff / p.noiseTolerance) * 50 * noiseSensMultiplier);
-  if (noiseScore >= 80) details.push(`مستوى الضوضاء مناسب (${sensorData.noise} dB)`);
-  else mismatches.push(`الضوضاء ${sensorData.noise} dB ${sensorData.noise > p.noisePreferred ? 'أعلى' : 'أقل'} من المفضّلة`);
+  if (noiseScore >= 80) details.push(`Noise level  (${sensorData.noise} dB)`);
+  else mismatches.push(`Noise ${sensorData.noise} dB ${sensorData.noise > p.noisePreferred ? '' : ''}  `);
 
   // Air quality match
   const co2SensMultiplier = p.co2Sensitivity === 'high' ? 1.5 : p.co2Sensitivity === 'medium' ? 1.2 : 1;
   const co2Score = sensorData.co2 <= 1000
     ? Math.max(0, 100 - ((sensorData.co2 - 400) / 600) * 30 * co2SensMultiplier)
     : Math.max(0, 100 - ((sensorData.co2 - 1000) / 500) * 80 * co2SensMultiplier);
-  if (co2Score >= 80) details.push(`جودة الهواء جيدة (CO₂: ${sensorData.co2} ppm)`);
-  else mismatches.push(`تركيز CO₂ مرتفع (${sensorData.co2} ppm) — حساسية ${SENSITIVITY_LABELS[p.co2Sensitivity]}`);
+  if (co2Score >= 80) details.push(` Air  (CO₂: ${sensorData.co2} ppm)`);
+  else mismatches.push(` CO₂ High (${sensorData.co2} ppm) —  ${SENSITIVITY_LABELS[p.co2Sensitivity]}`);
 
   // Humidity match
   const humidDiff = Math.abs(sensorData.humidity - p.humidityPreferred);
   const humidScore = Math.max(0, 100 - (humidDiff / p.humidityTolerance) * 50);
-  if (humidScore >= 80) details.push(`الرطوبة مناسبة (${sensorData.humidity}%)`);
-  else mismatches.push(`الرطوبة ${sensorData.humidity}% بعيدة عن المفضّلة ${p.humidityPreferred}%`);
+  if (humidScore >= 80) details.push(`Humidity  (${sensorData.humidity}%)`);
+  else mismatches.push(`Humidity ${sensorData.humidity}%    ${p.humidityPreferred}%`);
 
   const overall = Math.round(
     (tempScore * 0.25 + luxScore * 0.20 + noiseScore * 0.25 + co2Score * 0.20 + humidScore * 0.10)
@@ -357,20 +357,20 @@ export interface PersonalRecommendation {
   title: string;
   description: string;
   action: string;
-  wellCategory: string;
+  category: string;
   matchScore: number;
 }
 
 export function generatePersonalRecommendations(
   profile: UserProfile,
   currentZone: string,
-  match: WellnessMatch,
+  match: ComfortMatch,
   allZonesData: Array<{ id: string; name: string; sensorData: any }>
 ): PersonalRecommendation[] {
   const recommendations: PersonalRecommendation[] = [];
   const p = profile.preferences;
 
-  // إذا كانت البيئة الحالية مثالية
+  //   Current environment 
   if (match.overall >= 85) {
     recommendations.push({
       id: `opt-${profile.id}`,
@@ -378,21 +378,21 @@ export function generatePersonalRecommendations(
       userName: profile.name,
       type: 'optimal',
       priority: 'low',
-      title: 'البيئة الحالية مثالية لك',
-      description: `المنطقة الحالية تُحقق ${match.overall}% من أفضلياتك البيئية وفق WELL v2`,
-      action: 'استمر في عملك — البيئة مهيّأة لإنتاجيتك المثلى',
-      wellCategory: 'Mind & Comfort',
+      title: 'Current environment  ',
+      description: `   ${match.overall}%     comfort`,
+      action: '   —    ',
+      category: 'Mind & Comfort',
       matchScore: match.overall,
     });
     return recommendations;
   }
 
-  // توصية تغيير المنطقة — إيجاد أفضل منطقة
+  // recommendations   —   
   const betterZone = allZonesData
     .filter(z => z.id !== currentZone)
     .map(z => ({
       ...z,
-      match: calculateWellnessMatch(profile, z.sensorData),
+      match: calculateComfortMatch(profile, z.sensorData),
     }))
     .sort((a, b) => b.match.overall - a.match.overall)[0];
 
@@ -403,15 +403,15 @@ export function generatePersonalRecommendations(
       userName: profile.name,
       type: 'zone_change',
       priority: betterZone.match.overall - match.overall > 25 ? 'high' : 'medium',
-      title: `انتقل إلى ${betterZone.name}`,
-      description: `${betterZone.name} تُحقق ${betterZone.match.overall}% من أفضلياتك مقارنةً بـ ${match.overall}% في موقعك الحالي`,
-      action: `احجز مقعداً في ${betterZone.name} للحصول على بيئة أفضل بنسبة ${betterZone.match.overall - match.overall}%`,
-      wellCategory: 'Mind & Comfort',
+      title: `  ${betterZone.name}`,
+      description: `${betterZone.name}  ${betterZone.match.overall}%     ${match.overall}%   `,
+      action: `   ${betterZone.name}      ${betterZone.match.overall - match.overall}%`,
+      category: 'Mind & Comfort',
       matchScore: betterZone.match.overall,
     });
   }
 
-  // توصيات تعديل البيئة
+  //   
   if (match.temperature < 70) {
     const isHot = p.temperaturePreferred < 22;
     recommendations.push({
@@ -420,12 +420,12 @@ export function generatePersonalRecommendations(
       userName: profile.name,
       type: 'environment_adjust',
       priority: match.temperature < 50 ? 'high' : 'medium',
-      title: `اضبط درجة الحرارة`,
-      description: `تُفضّل ${p.temperaturePreferred}°C — درجة الحرارة الحالية لا تناسبك`,
+      title: ` Temperature`,
+      description: ` ${p.temperaturePreferred}°C — Temperature   `,
       action: isHot
-        ? `اطلب خفض التكييف إلى ${p.temperaturePreferred}°C أو انتقل لمنطقة أبرد`
-        : `اطلب رفع درجة الحرارة إلى ${p.temperaturePreferred}°C أو ارتدِ طبقة إضافية`,
-      wellCategory: 'Thermal Comfort',
+        ? `    ${p.temperaturePreferred}°C    `
+        : `  Temperature  ${p.temperaturePreferred}°C    `,
+      category: 'Thermal Comfort',
       matchScore: match.temperature,
     });
   }
@@ -437,12 +437,12 @@ export function generatePersonalRecommendations(
       userName: profile.name,
       type: 'environment_adjust',
       priority: p.noiseSensitivity === 'high' && match.noise < 50 ? 'high' : 'medium',
-      title: `مستوى الضوضاء يؤثر على إنتاجيتك`,
-      description: `حساسيتك للضوضاء ${SENSITIVITY_LABELS[p.noiseSensitivity]} — المستوى الحالي أعلى من مفضّلتك`,
+      title: `Noise level Affects `,
+      description: ` Noise ${SENSITIVITY_LABELS[p.noiseSensitivity]} —     `,
       action: p.noiseSensitivity === 'high'
-        ? 'استخدم سماعات عازلة للصوت أو انتقل لمنطقة التركيز الهادئة'
-        : 'انتقل لمنطقة أهدأ أو استخدم سماعات موسيقى تركيز',
-      wellCategory: 'Sound',
+        ? '        '
+        : '       ',
+      category: 'Sound',
       matchScore: match.noise,
     });
   }
@@ -454,12 +454,12 @@ export function generatePersonalRecommendations(
       userName: profile.name,
       type: 'environment_adjust',
       priority: 'medium',
-      title: `الإضاءة لا تناسب نشاطك`,
-      description: `تُفضّل ${p.illuminancePreferred} lux لنشاط "${ACTIVITY_LABELS[profile.primaryActivity]}"`,
+      title: `Light   `,
+      description: ` ${p.illuminancePreferred} lux  "${ACTIVITY_LABELS[profile.primaryActivity]}"`,
       action: p.illuminancePreferred > 400
-        ? 'اطلب رفع مستوى الإضاءة أو انتقل لمنطقة بإضاءة طبيعية أعلى'
-        : 'اطلب خفض الإضاءة أو استخدم مصباح مكتبي بدرجة حرارة لون دافئة',
-      wellCategory: 'Light',
+        ? '  Illuminance    Light  '
+        : '  Light      Temperature  ',
+      category: 'Light',
       matchScore: match.illuminance,
     });
   }
@@ -472,16 +472,16 @@ export function generatePersonalRecommendations(
       type: profile.healthConditions.includes('asthma') ? 'health_alert' : 'environment_adjust',
       priority: profile.healthConditions.includes('asthma') ? 'critical' : 'high',
       title: profile.healthConditions.includes('asthma')
-        ? 'تحذير صحي: جودة الهواء تؤثر على حالتك'
-        : 'جودة الهواء أقل من مفضّلتك',
-      description: `حساسيتك لجودة الهواء ${SENSITIVITY_LABELS[p.co2Sensitivity]}`,
-      action: 'انتقل لمنطقة بتهوية أفضل أو اطلب فتح نوافذ التهوية',
-      wellCategory: 'Air',
+        ? ' :  Air   '
+        : ' Air   ',
+      description: `  Air ${SENSITIVITY_LABELS[p.co2Sensitivity]}`,
+      action: '        Ventilation',
+      category: 'Air',
       matchScore: match.airQuality,
     });
   }
 
-  // توصية الحركة
+  // recommendations 
   if (p.movementFrequency === 'frequent') {
     recommendations.push({
       id: `move-${profile.id}`,
@@ -489,12 +489,12 @@ export function generatePersonalRecommendations(
       userName: profile.name,
       type: 'break',
       priority: 'low',
-      title: 'وقت للحركة',
-      description: 'بناءً على نمط عملك، يُنصح بأخذ استراحة حركية كل 45 دقيقة',
+      title: ' ',
+      description: '         45 ',
       action: p.standingDeskPreference
-        ? 'انتقل للوقوف على مكتب قابل للتعديل أو خذ جولة قصيرة'
-        : 'خذ استراحة 5 دقائق للتمدد والحركة',
-      wellCategory: 'Movement',
+        ? '         '
+        : '  5   ',
+      category: 'Movement',
       matchScore: 100,
     });
   }
@@ -511,9 +511,9 @@ export function createSampleProfiles(): UserProfile[] {
   return [
     {
       id: 'user-001',
-      name: 'سارة الأحمدي',
-      role: 'مصممة جرافيك',
-      department: 'التصميم الإبداعي',
+      name: 'Sarah Ahmed',
+      role: 'Graphic Designer',
+      department: 'Creative Design',
       avatar: '👩‍🎨',
       workStyle: 'introvert',
       primaryActivity: 'creative',
@@ -539,17 +539,17 @@ export function createSampleProfiles(): UserProfile[] {
         } as EnvironmentalPreferences,
         ['eye_strain', 'migraine']
       ),
-      wellnessScore: 0,
+      comfortScore: 0,
       createdAt: new Date(),
       lastUpdated: new Date(),
       preferredZones: ['zone-1', 'zone-6'],
-      notes: 'تُفضّل الإضاءة الطبيعية وتحتاج بيئة هادئة للتركيز الإبداعي',
+      notes: 'Needs steady lighting for financial review work',
     },
     {
       id: 'user-002',
-      name: 'محمد العمري',
-      role: 'مدير مشاريع',
-      department: 'إدارة المشاريع',
+      name: 'Mohammed Omari',
+      role: 'Project Manager',
+      department: 'Project Management',
       avatar: '👨‍💼',
       workStyle: 'extrovert',
       primaryActivity: 'meeting',
@@ -572,17 +572,17 @@ export function createSampleProfiles(): UserProfile[] {
         movementFrequency: 'frequent',
         standingDeskPreference: false,
       } as EnvironmentalPreferences,
-      wellnessScore: 0,
+      comfortScore: 0,
       createdAt: new Date(),
       lastUpdated: new Date(),
       preferredZones: ['zone-2', 'zone-3'],
-      notes: 'يعقد اجتماعات متكررة ويحتاج مساحات تعاونية',
+      notes: 'Uses nearby collaboration spaces for frequent meetings',
     },
     {
       id: 'user-003',
-      name: 'نورة السالم',
-      role: 'محللة بيانات',
-      department: 'تقنية المعلومات',
+      name: 'Noura Salem',
+      role: 'Data Analyst',
+      department: 'Information Technology',
       avatar: '👩‍💻',
       workStyle: 'introvert',
       primaryActivity: 'deep_focus',
@@ -608,17 +608,17 @@ export function createSampleProfiles(): UserProfile[] {
         } as EnvironmentalPreferences,
         ['asthma', 'back_pain']
       ),
-      wellnessScore: 0,
+      comfortScore: 0,
       createdAt: new Date(),
       lastUpdated: new Date(),
       preferredZones: ['zone-1'],
-      notes: 'تحتاج هواءً نقياً بسبب الربو ومكتباً قابلاً للتعديل لآلام الظهر',
+      notes: 'Needs clean air and ergonomic support for back pain',
     },
     {
       id: 'user-004',
-      name: 'خالد الزهراني',
-      role: 'مهندس معماري',
-      department: 'التصميم والهندسة',
+      name: 'Khalid Zahrani',
+      role: 'Architect',
+      department: 'Design and Engineering',
       avatar: '👨‍🏗️',
       workStyle: 'ambivert',
       primaryActivity: 'creative',
@@ -641,17 +641,17 @@ export function createSampleProfiles(): UserProfile[] {
         movementFrequency: 'frequent',
         standingDeskPreference: true,
       } as EnvironmentalPreferences,
-      wellnessScore: 0,
+      comfortScore: 0,
       createdAt: new Date(),
       lastUpdated: new Date(),
       preferredZones: ['zone-6', 'zone-2'],
-      notes: 'يحتاج إضاءة عالية للعمل على المخططات والنماذج',
+      notes: 'Needs high light levels for plans and physical models',
     },
     {
       id: 'user-005',
-      name: 'ريم الحربي',
-      role: 'أخصائية موارد بشرية',
-      department: 'الموارد البشرية',
+      name: 'Reem Harbi',
+      role: 'HR Specialist',
+      department: 'Human Resources',
       avatar: '👩‍💼',
       workStyle: 'extrovert',
       primaryActivity: 'administrative',
@@ -677,18 +677,18 @@ export function createSampleProfiles(): UserProfile[] {
         } as EnvironmentalPreferences,
         ['cold_sensitive']
       ),
-      wellnessScore: 0,
+      comfortScore: 0,
       createdAt: new Date(),
       lastUpdated: new Date(),
       preferredZones: ['zone-3', 'zone-4'],
-      notes: 'تُفضّل بيئة دافئة وتحتاج خصوصية للمقابلات',
+      notes: 'Prefers a warm setting and privacy for interviews',
     },
   ];
 }
 
 // ─── Local Storage Persistence ──────────────────────────────────────────────
 
-const STORAGE_KEY = 'well_user_profiles';
+const STORAGE_KEY = 'comfort_user_profiles';
 
 export function saveProfiles(profiles: UserProfile[]): void {
   try {
@@ -702,11 +702,13 @@ export function loadProfiles(): UserProfile[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored).map((p: any) => ({
+      const profiles = JSON.parse(stored).map((p: any) => ({
         ...p,
         createdAt: new Date(p.createdAt),
         lastUpdated: new Date(p.lastUpdated),
       }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+      return profiles;
     }
   } catch (e) {
     console.warn('Failed to load profiles from localStorage');

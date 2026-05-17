@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Download, Upload, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { FloorPlan, normalizeFloorPlanImport } from "@/lib/floorPlanEngine";
 import { parseDxfFloorPlan } from "@/lib/dxfImport";
 
@@ -56,14 +55,11 @@ export default function PlanImportPanel({
   onImportPlan,
   onResetPlan,
 }: PlanImportPanelProps) {
-  const { isArabic } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState<Status>({
     kind: "idle",
-    message: isArabic
-      ? "ارفع مخطط DXF لاستبدال المخطط التجريبي الحالي."
-      : "Upload a DXF floor plan export to replace the current sample plan.",
+    message: "Upload a DXF floor plan export to replace the current sample plan.",
   });
 
   useEffect(() => {
@@ -71,19 +67,17 @@ export default function PlanImportPanel({
       if (prev.kind !== "idle") return prev;
       return {
         kind: "idle",
-        message: isArabic
-          ? "ارفع مخطط DXF لاستبدال المخطط التجريبي الحالي."
-          : "Upload a DXF floor plan export to replace the current sample plan.",
+        message: "Upload a DXF floor plan export to replace the current sample plan.",
       };
     });
-  }, [isArabic]);
+  }, []);
 
   const importPlanFile = async (file: File) => {
     try {
       const lowerName = file.name.toLowerCase();
 
       if (lowerName.endsWith(".dwg")) {
-        throw new Error(isArabic ? "ملف DWG غير مدعوم داخل المتصفح" : "DWG is not supported in-browser");
+        throw new Error("DWG is not supported in-browser");
       }
 
       const isDxfByExt = lowerName.endsWith(".dxf");
@@ -113,22 +107,14 @@ export default function PlanImportPanel({
         kind: "success",
         message: isDxf
           ? usedLocalFallback
-            ? isArabic
-              ? `تم تحميل ${nextPlan.name} باستخدام محلل المتصفح الاحتياطي.${diagnosticsSummary} خطأ خدمة بايثون: ${serviceError}${notesSummary}`
-              : `Loaded ${nextPlan.name} using local fallback parser.${diagnosticsSummary} Python service error: ${serviceError}${notesSummary}`
-            : isArabic
-              ? `تم تحميل ${nextPlan.name} عبر خدمة DXF في بايثون.${diagnosticsSummary}${notesSummary}`
-              : `Loaded ${nextPlan.name} via Python DXF service.${diagnosticsSummary}${notesSummary}`
-          : isArabic
-            ? `تم تحميل ${nextPlan.name}.${diagnosticsSummary}${notesSummary}`
-            : `Loaded ${nextPlan.name}.${diagnosticsSummary}${notesSummary}`,
+            ? `Loaded ${nextPlan.name} using local fallback parser.${diagnosticsSummary} Python service error: ${serviceError}${notesSummary}`
+            : `Loaded ${nextPlan.name} via Python DXF service.${diagnosticsSummary}${notesSummary}`
+          : `Loaded ${nextPlan.name}.${diagnosticsSummary}${notesSummary}`,
       });
     } catch {
       setStatus({
         kind: "error",
-        message: isArabic
-          ? "تعذر قراءة الملف. يرجى رفع ملف DXF صالح."
-          : "Could not read that file. Upload a valid DXF floor plan export.",
+        message: "Could not read that file. Upload a valid DXF floor plan export.",
       });
     }
   };
@@ -173,9 +159,7 @@ export default function PlanImportPanel({
             <h3 className="text-sm font-semibold">DXF Upload</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            {isArabic
-              ? "ارفع ملف DXF للمخطط، أو استمر باستخدام المخطط التجريبي."
-              : "Upload a DXF floor plan export, or keep the built-in sample layout."}
+            Upload a DXF floor plan export, or keep the built-in sample layout.
           </p>
         </div>
 
@@ -187,7 +171,7 @@ export default function PlanImportPanel({
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="mr-1 h-3.5 w-3.5" />
-            {isArabic ? "رفع DXF" : "Upload DXF"}
+            Upload DXF
           </Button>
           <Button
             size="sm"
@@ -196,7 +180,7 @@ export default function PlanImportPanel({
             onClick={handleExport}
           >
             <Download className="mr-1 h-3.5 w-3.5" />
-            {isArabic ? "تنزيل JSON" : "Download JSON"}
+            Download JSON
           </Button>
           <Button
             size="sm"
@@ -205,7 +189,7 @@ export default function PlanImportPanel({
             onClick={onResetPlan}
           >
             <RotateCcw className="mr-1 h-3.5 w-3.5" />
-            {isArabic ? "إعادة العينة" : "Reset Sample"}
+            Reset Sample
           </Button>
         </div>
       </div>

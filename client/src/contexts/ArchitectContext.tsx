@@ -5,7 +5,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { FloorPlan, createDefaultFloorPlan, createDefaultAfterPlan } from '@/lib/floorPlanEngine';
-import { UserProfile, DEFAULT_PREFERENCES_BY_ACTIVITY, applyHealthAdjustments, EnvironmentalPreferences, calculateWellnessMatch } from '@/lib/userProfileEngine';
+import { UserProfile, DEFAULT_PREFERENCES_BY_ACTIVITY, applyHealthAdjustments, EnvironmentalPreferences, calculateComfortMatch, createSampleProfiles } from '@/lib/userProfileEngine';
 import { calculateSeatEnvironment, Seat } from '@/lib/floorPlanEngine';
 
 // ─── Season & Time Types ─────────────────────────────────────────────────────
@@ -13,10 +13,10 @@ import { calculateSeatEnvironment, Seat } from '@/lib/floorPlanEngine';
 export type Season = 'summer' | 'autumn' | 'winter' | 'spring';
 
 export const SEASON_LABELS: Record<Season, string> = {
-  summer: 'صيف',
-  autumn: 'خريف',
-  winter: 'شتاء',
-  spring: 'ربيع',
+  summer: 'Summer',
+  autumn: 'Autumn',
+  winter: 'Winter',
+  spring: 'Spring',
 };
 
 export const SEASON_MONTH: Record<Season, number> = {
@@ -165,7 +165,7 @@ function scoreSeatForProfile(profile: UserProfile, seat: Seat, plan: FloorPlan, 
     humidity: env.estimatedHumidity,
   };
 
-  const wellness = calculateWellnessMatch(profile, sensorData).overall;
+  const comfort = calculateComfortMatch(profile, sensorData).overall;
   const preferredZones = profile.preferredZones.length > 0 ? profile.preferredZones : inferPreferredZones(profile);
   const matches = preferredZones.filter(zone => tags.includes(zone)).length;
   const zoneBonus = Math.min(20, matches * 6);
@@ -174,7 +174,7 @@ function scoreSeatForProfile(profile: UserProfile, seat: Seat, plan: FloorPlan, 
   return {
     seat,
     env,
-    score: wellness + zoneBonus - fitPenalty,
+    score: comfort + zoneBonus - fitPenalty,
   };
 }
 
@@ -261,7 +261,7 @@ function createBestSeatForProfile(
         userId: profile.id,
         x,
         y,
-        label: `${profile.name} - مقعد`,
+        label: `${profile.name} - `,
       });
     }
   }
@@ -271,7 +271,7 @@ function createBestSeatForProfile(
     userId: profile.id,
     x: Math.round((safeMinX + safeMaxX) / 2),
     y: Math.round((safeMinY + safeMaxY) / 2),
-    label: `${profile.name} - مقعد`,
+    label: `${profile.name} - `,
   });
 
   const ranked = candidates
@@ -315,7 +315,7 @@ function placeProfileOnPlan(
       userId: profile.id,
       x: Math.round(plan.width / 2),
       y: Math.round(plan.height / 2),
-      label: `${profile.name} - مقعد`,
+      label: `${profile.name} - `,
     };
     const clampedFallback = clampSeatToPlanBounds(fallbackSeat, plan);
     return {
@@ -344,9 +344,9 @@ export function ArchitectProvider({ children }: { children: React.ReactNode }) {
   const [planAfter, setPlanAfter] = useState<FloorPlan>(() => {
     return createDefaultAfterPlan(defaultPlan);
   });
-  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [profiles, setProfiles] = useState<UserProfile[]>(() => createSampleProfiles());
   const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
-  const [city, setCity] = useState('الرياض');
+  const [city, setCity] = useState('Riyadh');
   const [activeTab, setActiveTab] = useState<'plan' | 'diagnosis' | 'generation' | 'comparison'>('plan');
   const [hourOfDay, setHourOfDay] = useState(10); // 10am default
   const [season, setSeason] = useState<Season>('summer');

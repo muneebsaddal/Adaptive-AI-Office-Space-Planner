@@ -41,23 +41,23 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* WELL v2 Status Colors */
-  --color-well-good: oklch(0.65 0.15 155);
-  --color-well-warning: oklch(0.75 0.16 65);
-  --color-well-critical: oklch(0.6 0.22 25);
-  --color-well-blue: oklch(0.58 0.18 240);
-  --color-well-purple: oklch(0.55 0.18 290);
+  /* Comfort status colors */
+  --color-comfort-good: oklch(0.65 0.15 155);
+  --color-comfort-warning: oklch(0.75 0.16 65);
+  --color-comfort-critical: oklch(0.6 0.22 25);
+  --color-comfort-blue: oklch(0.58 0.18 240);
+  --color-comfort-purple: oklch(0.55 0.18 290);
 }
 
 :root {
-  /* Scandinavian Wellness - Light Theme */
+  /* Scandinavian Comfort - Light Theme */
   --radius: 0.5rem;
   
   /* Primary: Sky Blue - Trust & Technology */
   --primary: oklch(0.52 0.18 240);
   --primary-foreground: oklch(0.98 0 0);
   
-  /* Secondary: Sage Green - Health & WELL */
+  /* Secondary: Sage Green - Health & comfort */
   --secondary: oklch(0.94 0.03 155);
   --secondary-foreground: oklch(0.35 0.08 155);
   
@@ -111,8 +111,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Cairo', 'Sora', sans-serif;
-    direction: rtl;
+    font-family: 'Sora', sans-serif;
+    direction: ltr;
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -158,18 +158,18 @@
     }
   }
 
-  /* WELL Score Badge */
-  .well-score-good {
+  /* Comfort score badges */
+  .comfort-score-good {
     background: oklch(0.93 0.06 155);
     color: oklch(0.3 0.12 155);
     border: 1px solid oklch(0.75 0.1 155);
   }
-  .well-score-warning {
+  .comfort-score-warning {
     background: oklch(0.97 0.06 65);
     color: oklch(0.45 0.14 65);
     border: 1px solid oklch(0.82 0.12 65);
   }
-  .well-score-critical {
+  .comfort-score-critical {
     background: oklch(0.95 0.06 25);
     color: oklch(0.45 0.18 25);
     border: 1px solid oklch(0.78 0.14 25);

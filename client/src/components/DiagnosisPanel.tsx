@@ -1,5 +1,5 @@
 /**
- * DiagnosisPanel — Tool A: Diagnose wellness gaps per employee
+ * DiagnosisPanel — Tool A: Diagnose comfort gaps per employee
  * Shows each employee's current environment vs their preferences,
  * highlights gaps, and suggests spatial interventions.
  */
@@ -18,10 +18,10 @@ const SEVERITY_COLORS = {
 };
 
 const SEVERITY_LABELS = {
-  critical: 'حرج',
-  high: 'مرتفع',
-  medium: 'متوسط',
-  low: 'منخفض',
+  critical: 'Critical',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 const PARAM_ICONS: Record<string, string> = {
@@ -59,11 +59,11 @@ function getGapDomains(diagnosis: EmployeeDiagnosis): Set<InterventionDomain> {
     if (gap.parameter === 'noise') domains.add('acoustic');
     if (gap.parameter === 'co2') domains.add('air');
   });
-  if (diagnosis.wellnessMatch.overall < 70) domains.add('biophilic');
+  if (diagnosis.comfortMatch.overall < 70) domains.add('biophilic');
   return domains;
 }
 
-function WellnessBar({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' | 'lg' }) {
+function ComfortBar({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' | 'lg' }) {
   const color = score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500';
   const textSize = size === 'lg' ? 'text-3xl' : size === 'md' ? 'text-xl' : 'text-sm';
   return (
@@ -81,7 +81,7 @@ function WellnessBar({ score, size = 'md' }: { score: number; size?: 'sm' | 'md'
 }
 
 function GapCard({ gap }: { gap: Gap }) {
-  const dirLabel = gap.direction === 'too_high' ? '↑ مرتفع' : gap.direction === 'too_low' ? '↓ منخفض' : '✓';
+  const dirLabel = gap.direction === 'too_high' ? '↑ High' : gap.direction === 'too_low' ? '↓ Low' : '✓';
   return (
     <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 border border-border">
       <span className="text-lg">{PARAM_ICONS[gap.parameter]}</span>
@@ -93,7 +93,7 @@ function GapCard({ gap }: { gap: Gap }) {
           </Badge>
         </div>
         <div className="text-xs text-muted-foreground mt-0.5">
-          الحالي: <strong>{gap.current}{gap.unit}</strong> — المفضّل: {gap.preferred}{gap.unit}
+          Current: <strong>{gap.current}{gap.unit}</strong> — Preferred: {gap.preferred}{gap.unit}
           <span className="ml-2 font-medium text-orange-600 dark:text-orange-400">{dirLabel}</span>
         </div>
       </div>
@@ -108,7 +108,7 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
   selectedGapDomains: Set<InterventionDomain> | null;
   filterEmployeeName?: string;
 }) {
-  const score = diagnosis.wellnessMatch.overall;
+  const score = diagnosis.comfortMatch.overall;
   const hasGaps = diagnosis.gaps.length > 0;
   const domainFilteredInterventions = useMemo(() => {
     if (!selectedGapDomains) return diagnosis.interventions;
@@ -134,17 +134,17 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
             <Badge variant="outline" className="text-[10px]">{diagnosis.seatLabel}</Badge>
           </div>
           <div className="mt-1.5 w-full max-w-[200px]">
-            <WellnessBar score={score} size="sm" />
+            <ComfortBar score={score} size="sm" />
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
           {hasGaps ? (
             <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px]">
-              {diagnosis.gaps.length} فجوة
+              {diagnosis.gaps.length} gaps
             </Badge>
           ) : (
             <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px]">
-              ✓ متوافق
+              ✓ Aligned
             </Badge>
           )}
           <span className="text-xs text-muted-foreground">{expanded ? '▲' : '▼'}</span>
@@ -156,14 +156,14 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
         <div className="p-4 border-t border-border bg-muted/20 space-y-4">
           {/* Environment readings */}
           <div>
-            <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">البيئة الحالية</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Current environment</h4>
             <div className="grid grid-cols-5 gap-2">
               {[
-                { label: 'حرارة', value: `${diagnosis.environment.estimatedTemperature}°C`, icon: '🌡️' },
-                { label: 'إضاءة', value: `${diagnosis.environment.estimatedIlluminance}`, unit: 'lux', icon: '💡' },
-                { label: 'ضوضاء', value: `${diagnosis.environment.estimatedNoise}`, unit: 'dB', icon: '🔊' },
+                { label: 'Temperature', value: `${diagnosis.environment.estimatedTemperature}°C`, icon: '🌡️' },
+                { label: 'Light', value: `${diagnosis.environment.estimatedIlluminance}`, unit: 'lux', icon: '💡' },
+                { label: 'Noise', value: `${diagnosis.environment.estimatedNoise}`, unit: 'dB', icon: '🔊' },
                 { label: 'CO₂', value: `${diagnosis.environment.estimatedCO2}`, unit: 'ppm', icon: '💨' },
-                { label: 'رطوبة', value: `${diagnosis.environment.estimatedHumidity}%`, icon: '💧' },
+                { label: 'Humidity', value: `${diagnosis.environment.estimatedHumidity}%`, icon: '💧' },
               ].map(item => (
                 <div key={item.label} className="bg-card rounded-lg p-2 text-center border border-border">
                   <div className="text-base">{item.icon}</div>
@@ -178,7 +178,7 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
           {/* Gaps */}
           {diagnosis.gaps.length > 0 && (
             <div>
-              <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">الفجوات المكتشفة</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Detected gaps</h4>
               <div className="space-y-2">
                 {diagnosis.gaps.map(gap => <GapCard key={gap.parameter} gap={gap} />)}
               </div>
@@ -188,7 +188,7 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
           {/* Interventions */}
           {domainFilteredInterventions.length > 0 && (
             <div>
-              <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">التدخلات المقترحة</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Suggested interventions</h4>
               <div className="space-y-2">
                 {domainFilteredInterventions.map(int => (
                   <div key={int.id} className="p-3 rounded-lg bg-card border border-border">
@@ -199,9 +199,9 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
                       <div>
                         <p className="text-xs font-semibold">{int.titleAr}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{int.descriptionAr}</p>
-                        <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">{int.wellCriteria}</p>
+                        <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">{int.criteria}</p>
                         <p className="text-[10px] text-green-600 dark:text-green-400">
-                          تحسّن متوقع: +{int.expectedImprovement}%
+                          Expected improvement: +{int.expectedImprovement}%
                         </p>
                       </div>
                     </div>
@@ -212,7 +212,7 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
           )}
           {selectedGapDomains && domainFilteredInterventions.length === 0 && (
             <div className="text-center py-3 text-muted-foreground text-xs">
-              لا توجد تدخلات مرتبطة بفجوات الموظف المحدد
+              No interventions mapped to the selected employee gaps
               <br />
               No interventions mapped to {filterEmployeeName ?? 'selected employee'} gaps
             </div>
@@ -220,7 +220,7 @@ function EmployeeCard({ diagnosis, expanded, onToggle, selectedGapDomains, filte
 
           {!hasGaps && (
             <div className="text-center py-3 text-green-600 dark:text-green-400 text-sm">
-              ✓ البيئة الحالية تتوافق مع تفضيلات هذا الموظف
+              ✓ The current environment matches this employee's preferences
             </div>
           )}
         </div>
@@ -242,11 +242,11 @@ export default function DiagnosisPanel() {
         const env = calculateSeatEnvironment(seat, plan, city, simulationDate);
         return diagnoseEmployee(profile, seat, env);
       })
-      .sort((a, b) => a.wellnessMatch.overall - b.wellnessMatch.overall);
+      .sort((a, b) => a.comfortMatch.overall - b.comfortMatch.overall);
   }, [plan, profiles, city, simulationDate]);
 
   const avgScore = diagnoses.length
-    ? Math.round(diagnoses.reduce((s, d) => s + d.wellnessMatch.overall, 0) / diagnoses.length)
+    ? Math.round(diagnoses.reduce((s, d) => s + d.comfortMatch.overall, 0) / diagnoses.length)
     : 0;
 
   const criticalCount = diagnoses.filter(d => d.gaps.some(g => g.severity === 'critical')).length;
@@ -272,8 +272,8 @@ export default function DiagnosisPanel() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
         <span className="text-4xl mb-3">🪑</span>
-        <p className="text-sm font-medium">لا يوجد موظفون مُعيَّنون لمقاعد في المخطط</p>
-        <p className="text-xs mt-1">اذهب إلى تبويب "المخطط" وعيّن موظفين للمقاعد</p>
+        <p className="text-sm font-medium">No employees are assigned to seats</p>
+        <p className="text-xs mt-1">Go to the Plan tab and assign employees to seats</p>
       </div>
     );
   }
@@ -286,27 +286,27 @@ export default function DiagnosisPanel() {
           <div className="text-3xl font-bold" style={{ color: avgScore >= 80 ? '#22c55e' : avgScore >= 60 ? '#f59e0b' : '#ef4444' }}>
             {avgScore}%
           </div>
-          <div className="text-xs text-muted-foreground mt-1">متوسط الرفاهية</div>
+          <div className="text-xs text-muted-foreground mt-1">Average comfort</div>
         </div>
         <div className="bg-card border border-red-200 dark:border-red-900 rounded-xl p-4 text-center">
           <div className="text-3xl font-bold text-red-500">{criticalCount}</div>
-          <div className="text-xs text-muted-foreground mt-1">حالات حرجة</div>
+          <div className="text-xs text-muted-foreground mt-1">Critical cases</div>
         </div>
         <div className="bg-card border border-green-200 dark:border-green-900 rounded-xl p-4 text-center">
           <div className="text-3xl font-bold text-green-500">{satisfiedCount}</div>
-          <div className="text-xs text-muted-foreground mt-1">موظفون راضون</div>
+          <div className="text-xs text-muted-foreground mt-1">Satisfied employees</div>
         </div>
       </div>
 
       {/* Overall bar */}
       <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">مستوى الرفاهية الكلي</span>
+          <span className="text-sm font-medium">Overall comfort level</span>
           <span className="text-sm font-bold">{avgScore}%</span>
         </div>
         <Progress value={avgScore} className="h-3" />
         <p className="text-xs text-muted-foreground mt-2">
-          {diagnoses.length} موظف — {satisfiedCount} متوافق — {diagnoses.length - satisfiedCount} يحتاج تدخلاً
+          {diagnoses.length} employees — {satisfiedCount} Aligned — {diagnoses.length - satisfiedCount} need intervention
         </p>
       </div>
 
@@ -314,7 +314,7 @@ export default function DiagnosisPanel() {
       <div className="space-y-3">
         <div className="bg-card border border-border rounded-xl p-3 space-y-3">
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            تصفية الموظفين | Employee Filter
+            Employee Filter
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -325,14 +325,14 @@ export default function DiagnosisPanel() {
                   : 'bg-card border-border hover:bg-muted/40'
               }`}
             >
-              الكل | All
+              All
             </button>
             {diagnoses.map((diagnosis) => {
-              const wellness = diagnosis.wellnessMatch.overall;
+              const comfort = diagnosis.comfortMatch.overall;
               const isSelected = selectedEmployeeId === diagnosis.userId;
-              const colorClass = wellness >= 80
+              const colorClass = comfort >= 80
                 ? 'border-green-400 text-green-700 dark:text-green-300'
-                : wellness >= 65
+                : comfort >= 65
                   ? 'border-amber-400 text-amber-700 dark:text-amber-300'
                   : 'border-red-400 text-red-700 dark:text-red-300';
               return (
@@ -350,7 +350,7 @@ export default function DiagnosisPanel() {
                   <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] px-1.5 py-0">
                     {diagnosis.gaps.length}
                   </Badge>
-                  <span className="font-semibold">{wellness}%</span>
+                  <span className="font-semibold">{comfort}%</span>
                 </button>
               );
             })}
@@ -364,17 +364,17 @@ export default function DiagnosisPanel() {
               <span className="font-semibold">{selectedDiagnosis.userName}</span>
               <Badge variant="outline" className="text-[10px]">{selectedDiagnosis.userRole}</Badge>
               <Badge variant="outline" className="text-[10px]">{selectedDiagnosis.seatLabel}</Badge>
-              <span className="font-bold ml-auto">{selectedDiagnosis.wellnessMatch.overall}%</span>
+              <span className="font-bold ml-auto">{selectedDiagnosis.comfortMatch.overall}%</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-xs border border-border rounded-lg overflow-hidden">
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="text-right p-2">المعيار | Parameter</th>
-                    <th className="text-right p-2">الحالي | Current</th>
-                    <th className="text-right p-2">المفضل | Preferred</th>
-                    <th className="text-right p-2">الشدة | Severity</th>
+                    <th className="text-right p-2">Parameter</th>
+                    <th className="text-right p-2">Current</th>
+                    <th className="text-right p-2">Preferred</th>
+                    <th className="text-right p-2">Severity</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -396,21 +396,21 @@ export default function DiagnosisPanel() {
 
             {selectedDiagnosis.gaps.length === 0 && (
               <div className="text-xs text-muted-foreground">
-                لا توجد فجوات بيئية لهذا الموظف حاليًا.
+                No environmental gaps detected for this employee.
                 <br />
                 No environmental gaps detected for this employee.
               </div>
             )}
 
             <p className="text-xs text-blue-700 dark:text-blue-300">
-              التدخلات أدناه مصفاة لمعالجة فجوات {selectedDiagnosis.userName} المحددة.
+              The interventions below are filtered for {selectedDiagnosis.userName} specific gaps.
               <br />
               Interventions below are filtered to address {selectedDiagnosis.userName}&apos;s specific gaps.
             </p>
           </div>
         )}
 
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">تشخيص كل موظف</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Employee diagnosis</h3>
         {diagnoses.map(d => (
           <EmployeeCard
             key={d.userId}

@@ -1,6 +1,6 @@
 /**
  * ComparisonPanel — Tool C: Compare two design scenarios
- * Shows wellness scores before and after design interventions.
+ * Shows comfort scores before and after design interventions.
  * The "after" plan can be edited: change glazing type, move seats, etc.
  */
 import React, { useEffect, useMemo, useState } from 'react';
@@ -13,10 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 type GlazingType = 'single' | 'double' | 'low-e' | 'triple';
 
 const GLAZING_LABELS: Record<GlazingType, string> = {
-  single: 'زجاج أحادي (الحالي)',
-  double: 'زجاج مزدوج',
-  'low-e': 'Low-E مزدوج (موصى به)',
-  triple: 'زجاج ثلاثي',
+  single: 'Single glazing (current)',
+  double: 'Double glazing',
+  'low-e': 'Low-E double glazing',
+  triple: 'Triple glazing',
 };
 
 const GLAZING_SPECS: Record<GlazingType, string> = {
@@ -58,7 +58,7 @@ function EmployeeRow({ result }: { result: ComparisonSummary['results'][0] }) {
         <div className="text-sm font-bold" style={{ color: result.beforeScore >= 80 ? '#22c55e' : result.beforeScore >= 60 ? '#f59e0b' : '#ef4444' }}>
           {result.beforeScore}%
         </div>
-        <div className="text-[10px] text-muted-foreground">{result.beforeGaps} فجوة</div>
+        <div className="text-[10px] text-muted-foreground">{result.beforeGaps} gaps</div>
       </div>
 
       <span className="text-muted-foreground text-xs">→</span>
@@ -68,7 +68,7 @@ function EmployeeRow({ result }: { result: ComparisonSummary['results'][0] }) {
         <div className="text-sm font-bold" style={{ color: result.afterScore >= 80 ? '#22c55e' : result.afterScore >= 60 ? '#f59e0b' : '#ef4444' }}>
           {result.afterScore}%
         </div>
-        <div className="text-[10px] text-muted-foreground">{result.afterGaps} فجوة</div>
+        <div className="text-[10px] text-muted-foreground">{result.afterGaps} gaps</div>
       </div>
 
       <ScoreDelta before={result.beforeScore} after={result.afterScore} />
@@ -121,15 +121,15 @@ export default function ComparisonPanel() {
     const assignedSeats = plan.seats.filter(s => s.userId);
     const ledCompensation = (southGlazing === 'low-e' || southGlazing === 'triple' ||
       westGlazing === 'low-e' || westGlazing === 'triple');
-    return compareScenarios(profiles, assignedSeats, plan, computedAfterPlan, city, ledCompensation);
-  }, [plan, computedAfterPlan, profiles, city, southGlazing, westGlazing]);
+    return compareScenarios(profiles, assignedSeats, plan, computedAfterPlan, city, ledCompensation, simulationDate);
+  }, [plan, computedAfterPlan, profiles, city, southGlazing, westGlazing, simulationDate]);
 
   if (summary.totalEmployees === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
         <span className="text-4xl mb-3">⚖️</span>
-        <p className="text-sm font-medium">لا يوجد موظفون مُعيَّنون لمقاعد في المخطط</p>
-        <p className="text-xs mt-1">اذهب إلى تبويب "المخطط" وعيّن موظفين للمقاعد</p>
+        <p className="text-sm font-medium">No employees are assigned to seats</p>
+        <p className="text-xs mt-1">Go to the Plan tab and assign employees to seats</p>
       </div>
     );
   }
@@ -138,11 +138,11 @@ export default function ComparisonPanel() {
     <div className="space-y-4">
       {/* Intervention controls */}
       <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-        <h3 className="text-sm font-semibold">اختر التدخلات التصميمية للسيناريو "بعد"</h3>
+        <h3 className="text-sm font-semibold">Choose design interventions for the after scenario</h3>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">زجاج الواجهة الجنوبية</label>
+            <label className="text-xs text-muted-foreground mb-1 block">South facade glazing</label>
             <Select value={southGlazing} onValueChange={v => setSouthGlazing(v as GlazingType)}>
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
@@ -157,7 +157,7 @@ export default function ComparisonPanel() {
           </div>
 
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">زجاج الواجهة الغربية</label>
+            <label className="text-xs text-muted-foreground mb-1 block">West facade glazing</label>
             <Select value={westGlazing} onValueChange={v => setWestGlazing(v as GlazingType)}>
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
@@ -179,7 +179,7 @@ export default function ComparisonPanel() {
             }`}
             onClick={() => setAddPartitions(!addPartitions)}
           >
-            🧱 إضافة حواجز صوتية
+            🧱 Add acoustic partitions
           </button>
           <button
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition-all ${
@@ -187,7 +187,7 @@ export default function ComparisonPanel() {
             }`}
             onClick={() => setImproveVentilation(!improveVentilation)}
           >
-            🌬️ تحسين التهوية
+            🌬️ Improve ventilation
           </button>
         </div>
       </div>
@@ -195,14 +195,14 @@ export default function ComparisonPanel() {
       {/* Summary comparison */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-xl p-4 text-center">
-          <p className="text-xs text-muted-foreground mb-1">قبل التدخل</p>
+          <p className="text-xs text-muted-foreground mb-1">Before intervention</p>
           <div className="text-4xl font-bold text-orange-500">{summary.avgBefore}%</div>
-          <p className="text-xs text-muted-foreground mt-1">متوسط الرفاهية</p>
+          <p className="text-xs text-muted-foreground mt-1">Average comfort</p>
         </div>
         <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-xl p-4 text-center">
-          <p className="text-xs text-muted-foreground mb-1">بعد التدخل</p>
+          <p className="text-xs text-muted-foreground mb-1">After intervention</p>
           <div className="text-4xl font-bold text-green-500">{summary.avgAfter}%</div>
-          <p className="text-xs text-muted-foreground mt-1">متوسط الرفاهية</p>
+          <p className="text-xs text-muted-foreground mt-1">Average comfort</p>
         </div>
       </div>
 
@@ -211,29 +211,29 @@ export default function ComparisonPanel() {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-2xl font-bold text-green-500">+{summary.avgImprovement}%</div>
-            <div className="text-xs text-muted-foreground">تحسّن كلي</div>
+            <div className="text-xs text-muted-foreground">Total improvement</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-blue-500">{summary.employeesImproved}</div>
-            <div className="text-xs text-muted-foreground">موظف تحسّن</div>
+            <div className="text-xs text-muted-foreground">Employees improved</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-indigo-500">{summary.totalEmployees}</div>
-            <div className="text-xs text-muted-foreground">إجمالي الموظفين</div>
+            <div className="text-xs text-muted-foreground">Total employees</div>
           </div>
         </div>
 
         {/* Visual bar comparison */}
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-3">
-            <span className="text-xs w-16 text-right text-muted-foreground">قبل</span>
+            <span className="text-xs w-16 text-right text-muted-foreground">Before</span>
             <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-orange-400 rounded-full transition-all duration-700" style={{ width: `${summary.avgBefore}%` }} />
             </div>
             <span className="text-xs w-10 font-bold text-orange-500">{summary.avgBefore}%</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs w-16 text-right text-muted-foreground">بعد</span>
+            <span className="text-xs w-16 text-right text-muted-foreground">After</span>
             <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-green-500 rounded-full transition-all duration-700" style={{ width: `${summary.avgAfter}%` }} />
             </div>
@@ -245,15 +245,15 @@ export default function ComparisonPanel() {
       {/* Per-employee results */}
       <div className="space-y-2">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          النتائج لكل موظف
+          Per-employee results
         </h3>
         <div className="flex items-center gap-4 text-[10px] text-muted-foreground px-1">
-          <span>الاسم</span>
+          <span>Name</span>
           <div className="flex-1" />
-          <span className="w-14 text-center">قبل</span>
+          <span className="w-14 text-center">Before</span>
           <span className="w-4" />
-          <span className="w-14 text-center">بعد</span>
-          <span className="w-12 text-center">التغيير</span>
+          <span className="w-14 text-center">After</span>
+          <span className="w-12 text-center">Change</span>
         </div>
         {summary.results
           .sort((a, b) => b.improvement - a.improvement)
@@ -262,11 +262,10 @@ export default function ComparisonPanel() {
           ))}
       </div>
 
-      {/* WELL v2 note */}
+      {/* Method note */}
       <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
         <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-          <strong>ملاحظة WELL v2:</strong> الأرقام مبنية على محاكاة بيئية وفق معادلات الكسب الحراري وتوهين الضوء والضوضاء.
-          تعكس التوجه النسبي للتحسين وليست قياسات حقيقية بمستشعرات — وهو ما يُعرَّف بـ "Simulation-based validation" في البحث الأكاديمي.
+          <strong>Method note:</strong> Scores combine floor-plan geometry, city climate, time, season, seat placement, and employee preferences to estimate the relative impact of each design intervention.
         </p>
       </div>
     </div>

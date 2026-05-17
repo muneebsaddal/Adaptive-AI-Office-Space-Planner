@@ -1,9 +1,9 @@
 /**
- * Floor Plan Engine — WELL v2 Adaptive Space Planning
+ * Floor Plan Engine — comfort Adaptive Space Planning
  * ====================================================
  * Manages the interactive floor plan: walls, windows, orientations,
  * and employee seat positions. Calculates environmental conditions
- * at each seat based on geometry and WELL v2 standards.
+ * at each seat based on geometry and comfort standards.
  */
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -300,16 +300,29 @@ export interface SeatEnvironment {
   estimatedHumidity: number; // %
 }
 
-// City climate data (dry-hot climate like Riyadh)
-const CITY_CLIMATE: Record<string, { baseTemp: number; humidity: number; co2Base: number }> = {
-  'الرياض': { baseTemp: 26, humidity: 35, co2Base: 650 },
-  'جدة': { baseTemp: 28, humidity: 55, co2Base: 620 },
-  'الدمام': { baseTemp: 27, humidity: 50, co2Base: 630 },
-  'أبوظبي': { baseTemp: 28, humidity: 55, co2Base: 640 },
-  'دبي': { baseTemp: 28, humidity: 60, co2Base: 630 },
-  'القاهرة': { baseTemp: 25, humidity: 45, co2Base: 680 },
-  'بيروت': { baseTemp: 23, humidity: 65, co2Base: 600 },
-  'عمّان': { baseTemp: 22, humidity: 50, co2Base: 590 },
+export const CITY_OPTIONS = [
+  'Riyadh',
+  'Singapore',
+  'Helsinki',
+  'Lisbon',
+  'Abha',
+  'Delhi',
+] as const;
+
+export type CityClimate = {
+  baseTemp: number;
+  humidity: number;
+  co2Base: number;
+};
+
+// One representative city per climate case: hot dry, hot humid, cold, mild coastal, high altitude, and dense urban air.
+export const CITY_CLIMATE: Record<string, CityClimate> = {
+  'Riyadh': { baseTemp: 26, humidity: 35, co2Base: 650 },
+  'Singapore': { baseTemp: 29, humidity: 78, co2Base: 620 },
+  'Helsinki': { baseTemp: 18, humidity: 45, co2Base: 580 },
+  'Lisbon': { baseTemp: 22, humidity: 60, co2Base: 600 },
+  'Abha': { baseTemp: 20, humidity: 50, co2Base: 585 },
+  'Delhi': { baseTemp: 29, humidity: 50, co2Base: 740 },
   'default': { baseTemp: 25, humidity: 45, co2Base: 650 },
 };
 
@@ -366,11 +379,26 @@ function estimateTemperature(
   return Math.round((baseTemp + heatAtSeat) * 10) / 10;
 }
 
-function estimateNoise(distanceToOpenArea: number, seatCount: number): number {
+function distancePointToSegment(
+  point: Point,
+  segment: { x1: number; y1: number; x2: number; y2: number },
+  scale: number
+) {
+  const dx = segment.x2 - segment.x1;
+  const dy = segment.y2 - segment.y1;
+  const lenSq = dx * dx + dy * dy;
+  let t = lenSq > 0 ? ((point.x - segment.x1) * dx + (point.y - segment.y1) * dy) / lenSq : 0;
+  t = Math.max(0, Math.min(1, t));
+  const px = segment.x1 + t * dx;
+  const py = segment.y1 + t * dy;
+  return Math.sqrt((point.x - px) ** 2 + (point.y - py) ** 2) / scale;
+}
+
+function estimateNoise(distanceToOpenArea: number, seatCount: number, acousticBuffer = 0): number {
   // Base office noise ~45dB, increases with occupancy, decreases with distance
   const base = 45 + Math.min(10, seatCount * 0.5);
   const reduction = Math.min(12, distanceToOpenArea * 2);
-  return Math.round(Math.max(30, base - reduction));
+  return Math.round(Math.max(30, base - reduction - acousticBuffer));
 }
 
 // Season-based outdoor temperature modifiers for Saudi cities
@@ -417,19 +445,20 @@ export function calculateSeatEnvironment(
   let nearestExteriorWall: Wall | null = null;
   for (const w of plan.walls) {
     if (w.type !== 'exterior') continue;
-    // Distance from point to line segment
-    const dx = w.x2 - w.x1;
-    const dy = w.y2 - w.y1;
-    const lenSq = dx * dx + dy * dy;
-    let t = lenSq > 0 ? ((seat.x - w.x1) * dx + (seat.y - w.y1) * dy) / lenSq : 0;
-    t = Math.max(0, Math.min(1, t));
-    const px = w.x1 + t * dx;
-    const py = w.y1 + t * dy;
-    const dist = Math.sqrt((seat.x - px) ** 2 + (seat.y - py) ** 2) / scale;
+    const dist = distancePointToSegment(seat, w, scale);
     if (dist < minExteriorDist) {
       minExteriorDist = dist;
       nearestExteriorWall = w;
     }
+  }
+
+  let minInteriorDist = Infinity;
+  let nearbyInteriorWalls = 0;
+  for (const w of plan.walls) {
+    if (w.type !== 'interior') continue;
+    const dist = distancePointToSegment(seat, w, scale);
+    if (dist < minInteriorDist) minInteriorDist = dist;
+    if (dist <= 2.2) nearbyInteriorWalls += 1;
   }
 
   const nearestWindowOrientation = nearestWindow?.orientation ?? null;
@@ -475,7 +504,11 @@ export function calculateSeatEnvironment(
     : 0;
   // Noise increases during work hours (9-12, 14-17)
   const noiseHourMod = (hour >= 9 && hour <= 12) || (hour >= 14 && hour <= 17) ? 5 : -3;
-  const noise = estimateNoise(minWindowDist, plan.seats.length) + noiseHourMod;
+  const acousticBuffer = Math.min(
+    8,
+    (Number.isFinite(minInteriorDist) && minInteriorDist <= 1.6 ? 4 : 0) + nearbyInteriorWalls * 1.5
+  );
+  const noise = estimateNoise(minWindowDist, plan.seats.length, acousticBuffer) + noiseHourMod;
   // CO2 increases with occupancy hours
   const co2HourMod = (hour >= 10 && hour <= 16) ? 80 : 20;
   const co2 = climate.co2Base + Math.max(0, (4 - minWindowDist) * 30) + co2HourMod;
@@ -501,40 +534,59 @@ export function calculateSeatEnvironment(
 // ─── Default Floor Plan ──────────────────────────────────────────────────────
 
 export function createDefaultFloorPlan(): FloorPlan {
-  const W = 800;
-  const H = 500;
-  const scale = 50; // 50px = 1m → 16m × 10m office
+  const W = 1100;
+  const H = 720;
+  const scale = 45; // 45px = 1m -> 24.4m x 16m demo office
 
   return {
     id: 'default',
-    name: 'مكتب نموذجي',
+    name: 'Comfort Showcase Office',
     width: W,
     height: H,
     scale,
-    city: 'الرياض',
+    city: 'Riyadh',
     buildingOrientation: 0,
     walls: [
-      // Exterior walls
-      { id: 'w-north', x1: 50, y1: 50, x2: 750, y2: 50, type: 'exterior', orientation: 'north', thickness: 6 },
-      { id: 'w-south', x1: 50, y1: 450, x2: 750, y2: 450, type: 'exterior', orientation: 'south', thickness: 6 },
-      { id: 'w-east', x1: 750, y1: 50, x2: 750, y2: 450, type: 'exterior', orientation: 'east', thickness: 6 },
-      { id: 'w-west', x1: 50, y1: 50, x2: 50, y2: 450, type: 'exterior', orientation: 'west', thickness: 6 },
-      // Interior partition
-      { id: 'w-int-1', x1: 400, y1: 50, x2: 400, y2: 250, type: 'interior', thickness: 4 },
+      { id: 'w-north', x1: 50, y1: 60, x2: 1050, y2: 60, type: 'exterior', orientation: 'north', thickness: 8 },
+      { id: 'w-south', x1: 50, y1: 660, x2: 1050, y2: 660, type: 'exterior', orientation: 'south', thickness: 8 },
+      { id: 'w-east', x1: 1050, y1: 60, x2: 1050, y2: 660, type: 'exterior', orientation: 'east', thickness: 8 },
+      { id: 'w-west', x1: 50, y1: 60, x2: 50, y2: 660, type: 'exterior', orientation: 'west', thickness: 8 },
+      { id: 'w-focus-collab', x1: 340, y1: 60, x2: 340, y2: 430, type: 'interior', thickness: 5 },
+      { id: 'w-collab-meeting', x1: 720, y1: 60, x2: 720, y2: 660, type: 'interior', thickness: 5 },
+      { id: 'w-focus-lounge', x1: 50, y1: 430, x2: 720, y2: 430, type: 'interior', thickness: 5 },
+      { id: 'w-meeting-breakout', x1: 720, y1: 300, x2: 1050, y2: 300, type: 'interior', thickness: 5 },
+      { id: 'w-quiet-phone', x1: 210, y1: 60, x2: 210, y2: 210, type: 'interior', thickness: 4 },
+      { id: 'w-quiet-phone-2', x1: 50, y1: 210, x2: 210, y2: 210, type: 'interior', thickness: 4 },
+      { id: 'w-project-room', x1: 480, y1: 60, x2: 480, y2: 235, type: 'interior', thickness: 4 },
+      { id: 'w-project-room-2', x1: 340, y1: 235, x2: 720, y2: 235, type: 'interior', thickness: 4 },
+      { id: 'w-huddle', x1: 875, y1: 300, x2: 875, y2: 505, type: 'interior', thickness: 4 },
+      { id: 'w-lounge-partition', x1: 360, y1: 430, x2: 360, y2: 660, type: 'interior', thickness: 4 },
     ],
     windows: [
-      { id: 'win-1', wallId: 'w-south', x: 200, y: 450, width: 80, height: 10, orientation: 'south', glazingType: 'single' },
-      { id: 'win-2', wallId: 'w-south', x: 500, y: 450, width: 80, height: 10, orientation: 'south', glazingType: 'single' },
-      { id: 'win-3', wallId: 'w-north', x: 300, y: 50, width: 100, height: 10, orientation: 'north', glazingType: 'double' },
-      { id: 'win-4', wallId: 'w-east', x: 750, y: 200, width: 10, height: 80, orientation: 'east', glazingType: 'single' },
+      { id: 'win-n-focus', wallId: 'w-north', x: 130, y: 60, width: 105, height: 12, orientation: 'north', glazingType: 'double' },
+      { id: 'win-n-project', wallId: 'w-north', x: 590, y: 60, width: 150, height: 12, orientation: 'north', glazingType: 'double' },
+      { id: 'win-n-meeting', wallId: 'w-north', x: 900, y: 60, width: 150, height: 12, orientation: 'north', glazingType: 'double' },
+      { id: 'win-s-lounge', wallId: 'w-south', x: 220, y: 660, width: 165, height: 12, orientation: 'south', glazingType: 'single' },
+      { id: 'win-s-collab', wallId: 'w-south', x: 540, y: 660, width: 185, height: 12, orientation: 'south', glazingType: 'single' },
+      { id: 'win-s-breakout', wallId: 'w-south', x: 890, y: 660, width: 150, height: 12, orientation: 'south', glazingType: 'single' },
+      { id: 'win-e-meeting', wallId: 'w-east', x: 1050, y: 175, width: 12, height: 145, orientation: 'east', glazingType: 'single' },
+      { id: 'win-e-breakout', wallId: 'w-east', x: 1050, y: 500, width: 12, height: 175, orientation: 'east', glazingType: 'single' },
+      { id: 'win-w-focus', wallId: 'w-west', x: 50, y: 335, width: 12, height: 145, orientation: 'west', glazingType: 'single' },
+      { id: 'win-w-lounge', wallId: 'w-west', x: 50, y: 565, width: 12, height: 115, orientation: 'west', glazingType: 'single' },
     ],
     seats: [
-      { id: 'seat-1', userId: null, x: 200, y: 200, label: 'مقعد 1' },
-      { id: 'seat-2', userId: null, x: 300, y: 200, label: 'مقعد 2' },
-      { id: 'seat-3', userId: null, x: 200, y: 320, label: 'مقعد 3' },
-      { id: 'seat-4', userId: null, x: 550, y: 200, label: 'مقعد 4' },
-      { id: 'seat-5', userId: null, x: 650, y: 300, label: 'مقعد 5' },
-      { id: 'seat-6', userId: null, x: 550, y: 350, label: 'مقعد 6' },
+      { id: 'seat-focus-1', userId: 'user-003', x: 145, y: 310, label: 'Focus 1' },
+      { id: 'seat-focus-2', userId: 'user-001', x: 255, y: 320, label: 'Focus 2' },
+      { id: 'seat-focus-3', userId: null, x: 150, y: 535, label: 'Quiet Desk' },
+      { id: 'seat-collab-1', userId: 'user-002', x: 430, y: 335, label: 'Collab 1' },
+      { id: 'seat-collab-2', userId: 'user-004', x: 575, y: 335, label: 'Collab 2' },
+      { id: 'seat-collab-3', userId: null, x: 615, y: 560, label: 'Collab South' },
+      { id: 'seat-project-1', userId: null, x: 570, y: 160, label: 'Project North' },
+      { id: 'seat-project-2', userId: null, x: 655, y: 190, label: 'Project Lead' },
+      { id: 'seat-meeting-1', userId: null, x: 830, y: 175, label: 'Meeting 1' },
+      { id: 'seat-meeting-2', userId: null, x: 965, y: 175, label: 'Meeting East' },
+      { id: 'seat-breakout-1', userId: null, x: 810, y: 505, label: 'Breakout 1' },
+      { id: 'seat-breakout-2', userId: 'user-005', x: 955, y: 540, label: 'Hot Facade' },
     ],
   };
 }
@@ -585,9 +637,9 @@ export function normalizeFloorPlanImport(input: unknown): FloorPlan {
   };
 }
 
-// ─── WELL v2 Compliance Check ────────────────────────────────────────────────
+// ─── comfort Compliance Check ────────────────────────────────────────────────
 
-export interface WellComplianceResult {
+export interface ComfortComplianceResult {
   illuminance: { pass: boolean; value: number; min: number; max: number };
   temperature: { pass: boolean; value: number; min: number; max: number };
   noise: { pass: boolean; value: number; min: number; max: number };
@@ -597,7 +649,7 @@ export interface WellComplianceResult {
   score: number; // 0-100
 }
 
-export function checkWellCompliance(env: SeatEnvironment): WellComplianceResult {
+export function checkComfortCompliance(env: SeatEnvironment): ComfortComplianceResult {
   const illum = { pass: env.estimatedIlluminance >= 300 && env.estimatedIlluminance <= 750, value: env.estimatedIlluminance, min: 300, max: 750 };
   const temp = { pass: env.estimatedTemperature >= 20 && env.estimatedTemperature <= 26, value: env.estimatedTemperature, min: 20, max: 26 };
   const noise = { pass: env.estimatedNoise <= 50, value: env.estimatedNoise, min: 30, max: 50 };
